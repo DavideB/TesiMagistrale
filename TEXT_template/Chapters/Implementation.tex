@@ -53,11 +53,11 @@ and during the execution, the maximum amount of allocable cores
 needs to be greater than the estimated one, in order to be able to
 accelerate when progressing slower than expected
 \[maxAllocableCores(sk) = overscale \cdot estimatedCores(sk)\]
-The final step is to determine the initial number of cores that should
-be assigned to the different executors, xSpark distributes the cores
-equally amongst the available workers by creating one executor per
+The final step determines the initial number of cores that should
+be assigned to the different executors. xSpark distributes the cores
+equally among the available workers by creating one executor per
 stage per worker. In this way, it is guaranteed that executor performances
-will be equal, and that xSpark can compute the same deadline
+will be the same for each of them, and that xSpark can compute the same deadline
 for all the executors. The initial number of cores per executor is
 computed as
 \[initCorePerExec(sk) = \lceil\dfrac {maxAllocableCores(sk)}{overscale \cdot cq \cdot numExecutors}\rceil\cdot cq\]
@@ -66,7 +66,7 @@ quantum$, a constant that defines the quantization applied to resource
 allocation, the smaller this value is, the more precise the allocation.
 
 \subsection{Current xSpark Scheduling Limitation}\label{sec:impl_xspark_sched_limitation}
-At runtime, an annotated DAG allows us to comprehend how much work has already been completed and how much work still needs to be done. This means that xSpark can only optimize the allocation of the resources if the execution of all jobs of the application use the same DAG. This might not always be the case, for example when the code contains branches or loops, because these might need to be resolved in different ways at runtime.
+At runtime, an annotated DAG allows us to comprehend how much work has already been completed and how much work still needs to be done. This means that xSpark can only optimize the allocation of the resources if the execution of all jobs of the application use the same DAG. This might not always be the case, for example when the code contains branches or loops, because these might need to be resolved in different ways at runtime. This is a severe limitation of the xSpark capability to manage real-world applications.
 
 \section{Scope and Objective of the Implementation Work}\label{sec:impl_scope_objective}
 The current work, by addressing the xSpark limitation explained above, aims at extending the scope of applicability of xSpark enhancing it with the capability to manage the case of applications that can potentially generate, at runtime, a different DAG at each execution. The code in this kind of applications includes conditional branches or iterative loops whose outcomes can only be resolved at runtime because they depend on user input values or results from previous computations that cannot be predicted or folded to constant values by the compiler. 
@@ -132,7 +132,7 @@ Inside \tool is kept a symbolic memory store that maps symbolic values (or symbo
 	\end{tabular}
 \end{table}
 \MyTab{Table:impl_symbolic_memory_store_contents} shows an example of symbolic memory store contents during the execution of the application, run with three commandline arguments having value “100”, “200”, “300” and two spark actions already executed, of which the second was executed twice.
-The application is also required to provide a class implementing a method called “evaluateActualGuards” that receives in input a Map of a symbolic memory store (as the one described above) and returns a list of the profile id’s whose DAG’s are still executable (i.e. they contain execution paths whose Path Conditions are satisfiable).
+The application is also required to provide a class implementing a method called \texttt{evaluateGuards} that receives in input a Map of a symbolic memory store (as the one described above) and returns a list of the profile id’s whose DAG’s are still executable (i.e. they contain execution paths whose Path Conditions are satisfiable).
 
 \subsection{A new Heuristic}\label{sec:new_heuristic}
 \tool implements \texttt{HeuristicSymExControlUnlimited}, a 
@@ -150,7 +150,7 @@ and returns the json of the application profile to be used during the execution 
 	\caption{\tool Heuristic related simplified class diagram.}
 	\label{fig:heuristic_simplified_class_diagram}
 \end{figure}
-Keeping in mind that the scheduler uses the \texttt{HeuristicControlUnlimited} to estimate how many cores are needed to execute the stage, given the application deadline and the parameters in the application profile, we expect the new heuristic to choose the profile so as not to jeopardize the controller's ability to meet the deadline. This can be achieved by choosing a profile that will lead to not underestimate the cores needed to execute the remaining stages. All the following parameters seem to be good proxies for estimating the remaining computing effort:
+Keeping in mind that the scheduler uses the \texttt{HeuristicSymExControlUnlimited} to estimate how many cores are needed to execute the stage, given the application deadline and the parameters in the application profile, we expect the new heuristic to choose the profile so as not to jeopardize the controller's ability to meet the deadline. This can be achieved by choosing a profile that will lead to not underestimate the cores needed to execute the remaining stages. All the following parameters seem to be good proxies for estimating the remaining computing effort:
 \begin{verbatim}
 1)	Number of remaining stages to be executed
 2)	Sum of duration of remaining stages to be executed
@@ -160,7 +160,7 @@ The above parameters can be calculated using the data inside the application jso
 Current implementation of the heuristic uses proxy \#1 (number of remaining stages to be executed). It calculates the value for each of the satisfiable profiles, and then selects the profile associated to the maximum value of the proxy. This way, we supply the “worst case” profile to the heuristic, so that the stage deadline is not overestimated and consequently the number of cores to be assigned for the next stage execution is not underestimated.
 
 \section{Application Parameters}\label{sec:application_parameters}
-As explained in Chapter~\ref{chap:Methodology}, the application parameters can be part of a path condition as they could have been associated to a symbol by the symbolic executor part of \dSymb. Hence, we have introduced in xSpark a mechanism to intercept and store these application parameters in the \tool \textit{Symbol Store}, as shown in \MyFig{fig:xsparkdagsymb}.  \MyListing{lst:SparkSubmit} shows part of the code of method \textit{submit} of xSpark class \textit{SparkSubmit}, that was modified in order to read the values of the application's runtime arguments passed via the Spark \textit{submit} command and write them as separate lines to textfile \textit{args.txt}. This file is a component of the \textit{\model Store}. Records from this file are read by xSpark at a later stage, when lazily executing the application by means of job scheduling.
+As explained in Chapter~\ref{chap:Methodology}, the application parameters can be part of a path condition as they could have been associated to a symbol by the symbolic executor part of \dSymb. Hence, we have introduced in xSpark a mechanism to intercept and store these application parameters in the \tool \textit{Symbol Store}, as shown in \MyFig{fig:xsparkdagsymb}.  \MyListing{lst:SparkSubmit_submit} shows part of the code of method \textit{submit} of xSpark class \textit{SparkSubmit}, that was modified in order to read the values of the application's runtime arguments passed via the Spark \textit{submit} command and write them as separate lines to textfile \textit{args.txt}. This file is a component of the \textit{\model Store}. Records from this file are read by xSpark at a later stage, when lazily executing the application by means of job scheduling.
  
 \lstinputlisting[
 firstline=1,
@@ -178,10 +178,10 @@ label=lst:SparkSubmit_submit
 ]{CodeFiles/SparkSubmit_submit.scala}
 
 \section{Application Profiling}\label{sec:application_profiling}
-As shown in \MyFig{fig:xsparkdagsymb}, for each set of input parameters identified by \dSymb a \textit{Launcher} is generated. A \textit{Launcher} is a Java class which contains the command to run the application with a specific set of arguments, which are in a 1:1 relationship with the application parameters of the corresponding \plan. An example of Launcher class is shown in \MyListing{lst:LauncherExample}. 
+As shown in \MyFig{fig:xsparkdagsymb}, for each set of input parameters identified by \dSymb a \textit{Launcher} is generated. A \textit{Launcher} is a Java class which contains the command to run the application with a specific set of arguments, which is in a 1:1 relationship with the application parameters of the corresponding \plan. An example of Launcher class is shown in \MyListing{lst:LauncherExample}. 
 
 A \textit{Profiling} (see \MyFig{fig:xSparkExecFlow}
-) of the application is done by running it with each \textit{Launcher}'s set of arguments. Each profiling run generates the corresponding \plan in a specialized JSON file. At the end of this process, all the generated \plans are packaged into another JSON file, in jargon called \textit{JumboJSON}, to form the \model. All the generated JSON files are then stored into the \model \textit{Store}  on the \textit{Spark Master} server. 
+) of the application is done by running it with each \textit{Launcher}'s set of arguments. Each profiling run generates the corresponding \plan in a specialized JSON file. At the end of this process, all the generated \plans are packaged into another JSON file, in jargon called \textit{JumboJSON}, to form the \model. All the generated JSON files are then stored along with the \model \textit{Store} on the \textit{Spark Master} server. 
 \lstinputlisting[
 firstline=1,
 lastline=42,
@@ -199,7 +199,7 @@ label=lst:LauncherExample
 
 
 \section{PEP*}\label{sec:getting_peps}
-The previous version of xSpark required a single \plan to be present in the \textit{\plan Store}, so we had to modify the xSpark class \textit{DAGScheduler} to  account for the data in the \textit{JumboJSON file} that now contains all the \plans. To maintain backwards compatibility, a new variable was introduced, called \textit{JumboJson}, to hold the contents of the \model Store. The modified code is in charge of checking the \textit{heuristic type} in the \textit{SparkContext} instance, to understand if it should expect the contents of the \model Store to be a single \plan or a whole set of \plans representing a \model. The heuristic type is initialized with the value of the key \textit{spark.control.heuristic} specified in the xSpark configuration file \textit{spark-defaults.conf}. 
+The previous version of xSpark required a single \plan to be present in the \textit{\plan Store}, so we had to modify the xSpark class \textit{DAGScheduler} to  account for the data in the \textit{JumboJSON file} that now contains all the \plans. To maintain backwards compatibility, a new variable was introduced, \texttt{JumboJson}, to hold the contents of the \model Store. The modified code is in charge of checking the \textit{heuristic type} in the \textit{SparkContext} instance \texttt{sc}, to understand if it should expect the contents of the \model Store to be a single \plan or a whole set of \plans representing a \model. The heuristic type is initialized with the value of the key \textit{spark.control.heuristic} specified in the xSpark configuration file \textit{spark-defaults.conf}. 
 
 \lstinputlisting[
 firstline=1,
@@ -217,7 +217,7 @@ label=lst:DAGScheduler-profile
 ]{CodeFiles/DAGScheduler_profile.scala}
 
 \section{GuardEvaluator}\label{sec:guard_evaluator}
-With the term \textit{GuardEvaluator} we collectively refer to the interface class \texttt{IGuardEvaluator} and its implementation class defining the \texttt{evaluateGuards} method, that is in charge of returning the list of valid profiles (\plans) when it is called with the HashMap of the known symbols and their values. The code of the  \texttt{IGuardEvaluator} interface is shown in \MyListing{lst:iGuardEvaluator}, while \MyListing{lst:GuardEvaluatorPromoCallsFile} shows an example of animplementation class and its method \texttt{evaluateGuards} for a specific application.
+With the term \textit{GuardEvaluator} we collectively refer to the interface class \texttt{IGuardEvaluator} and its implementation class defining the \texttt{evaluateGuards} method, that is in charge of returning the list of valid profiles (\plans) when it is called with the HashMap of the known symbols and their values. The code of the  \texttt{IGuardEvaluator} interface is shown in \MyListing{lst:IGuardEvaluator}, while \MyListing{lst:GuardEvaluatorPromoCallsFile} shows an example of an implementation class and its method \texttt{evaluateGuards} for a specific application.
 \lstinputlisting[
 firstline=1,
 lastline=9,
@@ -242,13 +242,13 @@ numbers=left,
 numberstyle=\tiny,
 stepnumber=1,
 numbersep=5pt,
-caption={Implementation class GuardEvaluatorPromoCallsFile.}, 
+caption={Class GuardEvaluatorPromoCallsFile, implementing the IGuardEvaluator interface.}, 
 captionpos=t,
 label=lst:GuardEvaluatorPromoCallsFile
 ]{CodeFiles/GuardEvaluatorPromoCallsFile.java}
 
 
-The application is in charge of providing the \textit{GuardEvaluator} as an implementation java class packaged inside the jar of the application. This class is loaded dynamically at runtime by the new code added for this purpose to the xSpark class \texttt{DAGScheduler} and shown in \MyListing{lst:DAGScheduler_GuardEvaluator}.
+The application is in charge of providing the \textit{GuardEvaluator} as a java class, implementing the interface \texttt{IGuardEvaluator}, and packaged inside the jar of the application. This class is loaded dynamically at runtime by the new code added for this purpose to the xSpark class \texttt{DAGScheduler} and shown in \MyListing{lst:DAGScheduler_GuardEvaluator}.
 \lstinputlisting[
 firstline=1,
 lastline=22,
@@ -265,7 +265,7 @@ label=lst:DAGScheduler_GuardEvaluator
 ]{CodeFiles/DAGScheduler_GuardEvaluator.scala}
 
 \section{Symbol Store}\label{sec:symbol_store}
-In order to take advantage of the symbolic execution, we need to maintain an updated   \textit{Symbol Store} containing all the symbols that can be part of a path condition and their associated determinations (assigned values). We added the code into the xSpark class DAGScheduler to abstractely represent the \textit{Symbol Store} as a  HashMap[String, Any]. Each entry of this HashMap stores a \textit{known symbol} name and its value. By \textit{known symbol} we mean a symbol that has been associated to a value during the concrete execution of program code. Given this defintion, at the very beginning of the computation the only known symbols are the runtime arguments passed to the application. We added to the xSpark class DAGScheduler the code to read the arguments and their values and create the corresponding Symbol Store entries. The code is shown in \MyListing{lst:DAGScheduler_symbol_store}, where we can notice an exception to what we just stated: the first two arguments loaded when var \textit{iter} is set to negative values ($-2\ and -1$) are respectively the GuardEvaluator class name and the application jar name, that are not symbols, hence they are not put into the Symbol Store.
+In order to take advantage of the symbolic execution, we need to maintain an updated   \textit{Symbol Store} containing all the symbols that can be part of a path condition and their associated determinations (assigned values). We added the code into the xSpark class \texttt{DAGScheduler} to abstractely represent the \textit{Symbol Store} as a  \textit{HashMap[String, Any]}. Each entry of this HashMap stores a \textit{known symbol} name and its value. By \textit{known symbol} we mean a symbol that has been associated to a value during the concrete execution of program code. Given this defintion, at the very beginning of the computation the only known symbols are the runtime arguments passed to the application. We added to the xSpark class \texttt{DAGScheduler} the code to read the arguments and their values and create the corresponding \textit{Symbol Store} entries. The code is shown in \MyListing{lst:DAGScheduler_symbol_store}, where we can notice that the first two arguments loaded when var \textit{iter} is set to negative values ($-2\ and -1$) are respectively the \textit{GuardEvaluator} class name and the application jar name, that are not symbols. They are not kept in the Symbol Store, instead they are used to initialize the variables \texttt{guardEvalClassname} and \texttt{appJar} which will be needed in a later step of the execution to identify the location and dynamically load the class implementing the \textit{GuardEvaluator} function.
 \lstinputlisting[
 firstline=1,
 lastline=17,
@@ -281,7 +281,7 @@ captionpos=t,
 label=lst:DAGScheduler_symbol_store
 ]{CodeFiles/DAGScheduler_symbol_store.scala}
 \section{Heuristic}\label{sec:impl_heuristic}
-The heuristic used by xSpark is determined by the value of configuration parameter spark.control.heuristic and is an implementation of the class \textit{HeuristicBase}, whose class diagram is shown in \MyFig{fig:heuristic_class_diagram}. In  \MyListing{lst:ControlEventListener_heuristic}, we can see that the heuristic \textit{HeuristicControl} is used by default, but other heuristics can be selected. \textit{HeuristicFixed} and \textit{HeuristicControlUnlimited} were already available in xSpark, while we implemented a new heuristic  \textbf{\textit{HeuristicSymExControlUnlimited}} to exploit \textit{Symbolic Execution}.
+The heuristic used by xSpark is determined by the value of configuration parameter spark.control.heuristic and is an implementation of the class \texttt{HeuristicBase}, whose class diagram is shown in \MyFig{fig:heuristic_class_diagram}. In  \MyListing{lst:ControlEventListener_heuristic}, we can see that the heuristic \textit{HeuristicControl} is used by default, but other heuristics can be selected. \texttt{HeuristicFixed} and \texttt{HeuristicControlUnlimited} were already available in xSpark, while we implemented a new heuristic  \textbf{\texttt{HeuristicSymExControlUnlimited}} to exploit \textit{Symbolic Execution}.
 \lstinputlisting[
 firstline=1,
 lastline=13,
@@ -303,7 +303,7 @@ label=lst:ControlEventListener_heuristic
 	\caption{Class diagram of Heuristic related classes.}
 	\label{fig:heuristic_class_diagram}
 \end{figure}
-\textit{HeuristicSymExControlUnlimited} extends \textit{HeuristicControlUnlimited} by adding the implementation of a new method, \textit{nextProfile}, taking parameters \textit{appJson}, the \textit{JumboJSON} containing the \model representation and \textit{valExFlows}, a list containing the id's of the valid application profiles,(i.e. the list of the \plans whose path conditions still hold true), and returns the \plan of the profile to be used during the executing of the next scheduled job.
+\texttt{HeuristicSymExControlUnlimited} extends \texttt{HeuristicControlUnlimited} by adding the implementation of a new method, \texttt{nextProfile}, taking parameters \texttt{appJson}, the \texttt{JumboJSON} containing the \model representation and \texttt{valExFlows}, a list containing the id's of the valid application profiles,(i.e. the list of the \plans whose path conditions still hold true), and returns the \plan of the profile to be used during the executing of the next scheduled job.
 \lstinputlisting[
 firstline=1,
 lastline=27,
@@ -318,21 +318,21 @@ caption={Class HeuristicSymExControlUnlimited.scala implementation.},
 captionpos=t,
 label=lst:HeuristicSymExControlUnlimited
 ]{CodeFiles/HeuristicSymExControlUnlimited.scala}
-Class HeuristicSymExControlUnlimited implementation code is shown in \MyListing{lst:HeuristicSymExControlUnlimited}. The \plan selection is made by choosing the \textit{"worst case"} among the valid \plans, that is the \plan with the maximum number of stages still to be executed, as we want to be conservative and minimize the deadline violations. If we wanted to optimize another peformance indicator, like minimum  resource utilization in absence of strict deadline commitment, we could choose the profile with an average number of remaining stages to be executed. 
+Class \texttt{HeuristicSymExControlUnlimited} implementation code is shown in \MyListing{lst:HeuristicSymExControlUnlimited}. The \plan selection is made by choosing the \textit{"worst case"} among the valid \plans, that is the \plan with the maximum number of stages still to be executed, as we want to be conservative and minimize the deadline violations. If we wanted to optimize another performance indicator, like minimum  resource utilization in absence of strict deadline commitment, we could choose the profile with an average number of remaining stages to be executed. 
   
 \section{Symbols}\label{sec:guardevaluator}
-As mentioned in \MySec{sec:symbol_store}, we have to update the Symbol Store everytime a variable associated to a symbol is evaluated by the concrete execution of the application. We adopted the convention to identify a symbol by the string \textit{arg\_n} if it refers to a runtime application argument, where n is the position of the argument (e.g. \textit{arg\_$0$}), or by a string obtained by concatenating its \textit{CallSite} and \textit{IterationNumber} separated by an underscore character \textit{"\_"}, where \textit{Call Site} is a string obtained by concatenating \textit{SparkActionName}, \textit{ApplicationClassName}, \textit{SourceLanguageName:SourceLineNumber} separated by an underscore character \textit{"\_"}, and  \textit{IterationNumber} is an integer starting from $0$ and incremented everytime the same line of code is re-executed (e.g. due to iterative loops). Examples of formal symbol names are shown in \MyFig{fig:symbol_name}.
+As mentioned in \MySec{sec:symbol_store}, we have to update the Symbol Store everytime a variable associated to a symbol is evaluated by the concrete execution of the application. We adopted the convention to identify a symbol by the string \textit{arg\_n} if it refers to a runtime application argument, where n is the position of the argument (e.g. \textit{arg\_$0$}), or by a string obtained by concatenating its \textit{CallSite} and \textit{IterationNumber} separated by an underscore character \textit{"\_"}, where \textit{Call Site} is a string obtained by concatenating \textit{SparkActionName}, \textit{ApplicationClassName}, \textit{SourceLanguageName:SourceLineNumber} separated by an underscore character \textit{"\_"}, and  \textit{IterationNumber} is an integer starting from $0$ and incremented everytime a call is originated by the same \textit{CallSite}. i.e. the same line of code is re-executed (e.g. due to iterative loops). Examples of formal symbol names are shown in \MyFig{fig:symbol_name}.
 \begin{figure}[tbhp]
 	\centering
 	\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
 		          arg_0
-		          count_PromoCalls_java:45_0
+		          count_PromoCalls_java:45_2
 	\end{lstlisting}
 	\caption{Example of symbol formal names.}
 	\label{fig:symbol_name}
 \end{figure}
 
-As stated above, a symbol is identified by its \textit{CallSite}. This means that to identify the symbols we have to intercept their CallSite. Since the values associated to a symbol can only be changed by xSpark \textit{actions} which delimit jobs, we added code to the method \textit{runJob} of class \textit{DAGScheduler} to extract the \textit{CallSite}, generate a symbol and push it in the Symbol Store everytime the method runJob is called. The code is shown in \MyListing{lst:DAGScheduler_runJob}. 
+As stated above, a symbol is identified by its \textit{CallSite}. This means that to identify the symbols we have to intercept calls coming from their  \textit{CallSite}. Since the values associated to a symbol can only be changed by xSpark \textit{actions} which delimit jobs, we added code to the method \texttt{runJob} of class \texttt{DAGScheduler} to extract the \textit{CallSite}, generate a symbol and push it in the \textit{Symbol Store} everytime the method \texttt{runJob} is called. The code is shown in \MyListing{lst:DAGScheduler_runJob}. 
 \lstinputlisting[
 firstline=1,
 lastline=14,
@@ -347,15 +347,15 @@ caption={Changes to class DAGScheduler.scala - method runJob.},
 captionpos=t,
 label=lst:DAGScheduler_runJob
 ]{CodeFiles/DAGScheduler_runJob.scala}
-The variable actionCallSite is initialized using the value of the \texttt{callSite} parameter.
-An auxilliary structure, the \texttt{HashMap[String, Int]} \texttt{symbolMap} keeps track of the \texttt{actionCallSite}s and counts how many times each of them has called the method runJob. The value of the count determines the suffix of each symbol. Symbols are initially assigned a \texttt{null} value, and stay in the symbol store waiting to be assigned the result of the \textit{action} originated from \texttt{CallSite}. 
+The variable \texttt{actionCallSite} is initialized using the value of the \texttt{callSite} parameter.
+An auxilliary structure, the \textit{HashMap[String, Int]} \texttt{symbolMap} keeps track of every \texttt{actionCallSite} and counts how many times each of them has called the method runJob. The value of the count determines the suffix of each symbol. Symbols are initially assigned a \texttt{null} value, and stay in the symbol store waiting to be assigned the result of the \textit{action} originated from the \texttt{actionCallSite}. 
 
-This task is performed by the new method \texttt{resultComputed}, that was added the xSpark class \texttt{DAGScheduler}. \texttt{resultComputed} is called by the homonymous method, that we have added to the class \texttt{SparkContext}, that passes to it the computed result of the action. 
+This task is performed by the new method \texttt{resultComputed}, that was added to the xSpark class \texttt{DAGScheduler}. \texttt{resultComputed} is called by the homonymous method, added to the class \texttt{SparkContext}, that passes to it the computed result of the action received from an \textit{action} method in the class \texttt{RDD}. 
 %Since \textit{action}s are executed by specialized methods in the \texttt{RDD} xSpark class, 
-Lastly, we have modified the methods that execute the \textit{action}s in the \texttt{RDD} xSpark class by inserting a call to the method \texttt{resultComputed} of the SparkContext instance \texttt{sc} and passing to it the computed result of the action. 
+Lastly, we have indeed modified the methods that execute the \textit{action}s in the \texttt{RDD} xSpark class by inserting a call to the method \texttt{resultComputed} of the \texttt{SparkContext} instance \texttt{sc} and passing to it the computed result of the action. 
 %In turn, the method \texttt{resultComputed} in SparkContext calls \texttt{resultComputed} of class \texttt{DAGSCheduler}. 
 
-Updating the value of \textit{symbols} in the \textit{Symbol Store} is not the only task fulfilled by the \texttt{resultComputed} method of class \texttt{DAGScheduler}. It also calls the method \texttt{GuardEvaluator} with the map of the known \textit{symbols} and get the list of valid profiles. It is also in charge of selecting the profile \texttt{appJson} to be used to run the next job. It fulfills this task by passing the list of valid profiles in a call to the  method \texttt{nextProfile} of the \texttt{HeuristicSymExControlUnlimited} instance \texttt{heuristic}. 
+Updating the value of \textit{symbols} in the \textit{Symbol Store} is not the only task fulfilled by the \texttt{resultComputed} method of class \texttt{DAGScheduler}. It also executes the method stored in the variable \texttt{guardEvalMethod} with the map of the known \textit{symbols} getting in return the variable \texttt{new\_validExecFlows} containing the list of valid profiles. It is also in charge of selecting the profile \texttt{appJson} to be used to run the next job. It fulfills this task by calling the method \texttt{nextProfile} of the \texttt{HeuristicSymExControlUnlimited} instance \texttt{heuristic} and passing to it the list of valid profiles. In returns, it gets the json profile to be used in the next job run, stored in the variable appJson. 
 
 The new and modified methods are shown in Listings \ref{lst:DAGScheduler_resultComputed}, \ref{lst:SparkContext_resultComputed}, \ref{lst:RDD_actions}.
 
