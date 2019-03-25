@@ -1,0 +1,19 @@
+{ ...
+	"3": {
+			...
+			"cachedRDDs": [16, 9],
+			"duration": 504086,
+			"genstage": false,
+			"name": "mapPartitions at . . . ",
+			"nominalrate": 413525.2675138766,
+			"numtask": 1000,
+			"parentsIds ": [1, 2],
+			"recordsread": 1000,
+			" recordswrite": 0.0,
+			" shufflerecordsread": 208452298,
+			" shufflerecordswrite ": 1000000,
+			"skipped": false,
+			"weight": 4.97875957673889
+			...
+		},
+... }

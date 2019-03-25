@@ -1,0 +1,123 @@
+\chapter{Introduction} \label{chap:Introduction}
+\begin{flushright}{\slshape    
+   Science, my boy, is made up of mistakes, but they are mistakes
+   which it is useful to make, because they lead little by little
+   to the truth}. \\ \medskip --- \citeauthor{verne_journey:1957}
+   \citetitle{verne_journey:1957} \citeyear{verne_journey:1957}
+\end{flushright} 
+
+\lettrine[lines=4]{\textcolor{purple}{C}}{loud} computing has become a widely used form of service oriented computing, where infrastructure and solutions are offered as a service. The cloud has dramatically changed the way computing infrastructures are abstracted and used. Some of the most intriguing features of cloud computing are elasticity (e.g. on demand resource scaling), pay-per-use, no upfront capital investment, low time to market and transfer of risk. 
+
+The term "big data" is used to describe a large amount of data that can be structured, like in the traditional relational databases, semi-structured, like in the self-described XML or JSON documents, or unstructured, like in the logfiles collected mostly by web applications to monitor usage or other user's preferences. More properly, we call big data those that cannot be handled using traditional database and software technologies. 
+
+\section{Context}\label{sec:context}
+Today, every second 8,411 Tweets are sent, 902 Instagram photos are uploaded, 1,502 Tumblr posts are created, 3,690 Skype calls are done, 73,116 Google searches are performed and 2,780,000 emails are sent~\cite{misc:InternetLiveStats}. These data are collected and analyzed. 
+
+Gartner defines big data as data that contains greater variety arriving in increasing volumes and with ever-higher velocity. This is known as the three V's characterizing  big data: Volume, Velocity, Variety~\cite{WhatIsBigData}. 
+
+Volume is important because the amount of data drives both the size of memory infrastructure needed to hold them and the computation effort for their analysis. With big data, you’ll have to process high volumes of low-density, unstructured data. This can be data of unknown value, such as Twitter data feeds, clickstreams on a webpage or a mobile app, or sensor-enabled equipment. In some cases, this might be tens of terabytes of data, sometimes hundreds of petabytes. 
+
+Velocity is the fast rate at which data is received and (perhaps) acted upon. Normally, highest velocity data streams are directly stored into memory versus being written to disk. Some internet-enabled smart products operate in real time, or near real time, requiring a very fast evaluation and action. 
+
+Variety refers to the many available data types. Traditional data types were structured and are suitable to be stored and managed in a relational database. With the rise of big data, data arrives in an unstructured form. Unstructured and semistructured data types, such as text, audio, and video require an additional preprocessing effort to transform, derive meaning and attach metadata to them. 
+
+Storing and processing big volumes of data requires scalability, fault tolerance and availability~\cite{articleBigData:2017}. 
+
+Scalability means the ability to maintain a near-linear progression between size of data to process and computational resources to perform the task. A big challenge to scalability is the overhead to keep the numerous chunks of intermediate results of the data processing steps in synch. Such overhead could drain so many resources to hinder scalability already above modest scale factors.
+
+Fault tolerance is a technology challenge in big data, especially when processing involves many networked nodes and it becomes cumbersome to retain all the checkpoints/restarts to be  enacted upon partial processing failures. Devising 100\% reliable systems is not an easy task, however the systems can be architected so that the probability of failure falls within the allowed range. 
+
+By means of hardware virtualization, cloud computing services satisfies all the requested requisites needed to manipulate big data. Elasticity and redundancy provided by cloud computing also enable big data application high availability, scalability and fault tolerance.
+Big data also represent an unprecedented business opportunity for many companies which started to deliver big data applications as a service. According to SoftwareTestingHelp~\cite{misc:BigDataCompanies}, these are the top 10 big data companies of 2019: IBM~\cite{misc:IBM}, HP Enterprise~\cite{misc:HPE}, Teradata~\cite{misc:Teradata}, Oracle~\cite{misc:Oracle}, SAP~\cite{misc:SAP}, Dell EMC~\cite{misc:EMC}, Amazon~\cite{misc:AWS}, Microsoft~\cite{misc:Microsoft}, Google~\cite{misc:Google}, VMware~\cite{misc:VMware}.
+
+Big data applications are used to transform, aggregate and analyze a large amount of data in an easy and efficient way. Specialized frameworks are used to transform these applications in atomic parts that can be executed in a distributed cluster of physical or virtual machines. The limit to the level of parallelism we can obtain is given by the number of machines and the amount of synchronization (e.g. aggregations, grouping) needed among the chunks of data representing the intermediate results. This paradigm has been historically represented by the map-reduce programming model firstly introduced by Google~\cite{misc:GoogleMapReduce}. Nowadays, more advanced solutions are available, such as Apache Spark~\cite{misc:ApacheSpark} and Apache Tez~\cite{misc:ApacheTez} that provide a greater flexibility and allow building large-scale data processing applications using a DAG based structure.
+
+One of the most popular cluster computing framework for big data analytics is Apache Spark  ~\cite{articleApacheSpark:2015}. Spark provides a fast and general data processing platform, letting users execute programs 100x faster in memory or 10x faster on disk than Hadoop, indeed in 2014 it won the Daytona GraySort contest as the fastest open source engine for sorting a petabyte~\cite{articleApacheSpark:2016}. Spark is fault-tolerant and is designed to run on commodity hardware. It generalizes the two stage Map-Reduce to support arbitrary DAG. The main advantage of Spark with respect to previous cluster computing frameworks is the fast data sharing between operations. For example, Apache Hadoop requires intermediate data to be written to disk in order to be accessible by the following operations, Spark instead allows to execute in-memory computing. Spark offers a quick way of writing code by means of high-level operators provided in the API: Spark Core, Spark SQL, Spark Streaming, MLlib (machine learning), GraphX (graph). Spark integrates well with various storage systems,  including Amazon S3, Hadoop HDFS and any POSIX-compliant file system. Spark provides its own cluster manager, but it can also run on clusters managed by Hadoop Yarn or Apache Mesos. Spark is often used for in-memory computation, but is also capable of handling workloads whose size exceeds the aggregate cluster memory. 
+
+In order to execute big data applications, Spark~\cite{Zaharia2010} divides the computation into different phases and split the input dataset into partitions that are stored in a distributed fashion and processed in parallel. Spark exploits in-memory processing and storage as a means to reuse partial results. Spark applications can be written in Java, Python, or Scala and exploit two types of dedicated operations: \textit{action}s and  \textit{transformation}s. Actions trigger (distributed) computations that return results to the application. Transformations carry out data transformation in parallel. Spark groups operations into \textit{stage}s and then into \textit{job}s. A stage is composed by a sequence of transformations that do not require data shuffling, while a job identifies a sequence of transformations between two actions. For each job, Spark computes a \textit{Parallel Execution Plan} (\plan) to maximize the parallelism while executing an application. In fact a stage is, by definition, executed in parallel but different stages can also be executed concurrently. For this reason, Spark materializes \plans as directed acyclic graphs of stages, while the complete \plan of an application is simply the sequence of the \plans of its jobs. 
+
+The execution of Spark applications is based on the definition of the execution order and parallelism of the different jobs, given data and available resources. Spark keeps track of these dependencies in a graph that we will refer to as the (parallel) execution plan of the application, also called \plan.
+
+A very important measure related to IT applications is the \textit{Quality of Service} (\qos in the reminder of this document).
+
+The notion of \qos in big data application differ by application type. Interactive applications are usually assessed according to response time or throughput, and their fulfillment depends on the intensity and variety of the incoming requests. Big data applications might require a single batch computation on a very large dataset, thus \qos must consider the execution of a single run. In this domain \qos is often called deadline, or the desired duration of the computation. Many factors influence the duration of an application execution, surely resource allocation and scheduling greatly influence the duration. 
+
+A resource allocation problem arises when applications with different structures run in contexts with different amount of resources or size of input datasets. A scheduling problem arises when many applications run concurrenlty on the same hardware, so that each application cannot have the totality of the resources assigned to itself. Satisfying deadline-based \qos constraints is a problem related to resource allocation, since the amount of allocated resources determines the duration of the execution of Spark applications. The simplest option available on all cluster managers is static partitioning of the resources. This way, each application is given a maximum amount of resources it can use, and holds them for the whole execution time. Memory sharing across applications is currently not provided. Spark also provides a mechanism to dynamically adjust the resources assigned to a specific application according to the workload. Applications may give resources back to the cluster if they are no longer used and re-acquire them again when needed.
+
+xSpark, developed at Politecnico di Milano, is an extension of Spark that offers fine-grained dynamic resource allocation using lightweight containers and enforces \qos constraints. xSpark estimates the execution times and allocate resource in order to meet user defined deadlines. A previous work on xSpark has addressed the scheduling problem and established a policy for managing the deadlines when multiple applications run simultaneously on the same hardware.
+
+We have mentioned availability, fault tolerance and availability as fundamental requirements and \qos as a measure of the capability to meet a user-defined deadline when processing big data. 
+
+The work in this thesis will focus on \qos.
+
+\section{Problem and Motivation}\label{sec:problem_motivation}
+The growing importance of big-data applications has favoured the birth of many analysis techniques to estimate the execution time of Spark applications and perform a proper allocation of resources. For example, Islam et al.~\cite{dSpark} propose a solution to statically allocate resources to deadline-constrained Spark applications while minimizing execution costs. Sidhanta et al.~\cite{Sidhanta2016} estimate the duration of Spark applications using a closed-form model based on the size of the input dataset and the size of the available cluster. Alipourfard et. al~\cite{Alipourfard} use Bayesian optimization to generate performance models of Spark applications and compute the best configuration for their execution.  Baresi et al.~\cite{xsparkreport, Quattrocchi2018} propose \cSpark, an extension of Spark that exploits control theory and containers\footnote{\url{https://www.docker.com}.} to scale allocated resources elastically given the execution times of interest and the other applications  on the same cluster.
+
+All the previous works regarding the estimation of the execution times and dynamic provisioning of resources have always assumed the uniquess of the execution plan for an application, given the computing resources available. This assumption is a simplification of real-world applications, since the actual execution plan is generally different across different program paths when the application code includes conditional branches and loops. Hence, the assumption of a unique \plan limits the precision of the analysis and prediction techniques.
+
+xSpark offers optimized and elastic provisioning of resources in order to meet user defined deadlines. This is obtained by using nested control loops. A centralized loop is implemented on the master node and controls the execution of different stages of an application. Multiple local loops, one per executor, focus on task execution. xSpark exploits metadata provided by an initial profiling to create an enriched annotated DAG of the application hat holds information about the execution of the stages. At runtime, the annotated DAG is used to understand how much work has already been done and how much work remains to complete the application. Since all executions of the same application use the same DAG, we infer that an xSpark implicit requirement is that applications cannot contain branches or loops, which might be resolved in different ways at runtime. 
+
+The xSpark centralized control loop is activated before the execution of each stage and uses a heuristic to assign a stage deadline and calculate the required CPU cores needed to satisfy that deadline, using the information contained in the enriched DAG and the user-provided  application deadline. Many factors can influence the actual performance and invalidate the prediction. Local control loops have the objective to counteract those imprecisions, by dynamically modifying the amount of CPU cores assigned to the executors during the execution of a stage. A control theory algorithm determines the amount of CPU cores to be allocated to the executor for the next control period. Docker is used to tune the number of CPU cores allocate to the executors, which are run inside lightweight containers~\cite{misc:Docker}. xSpark is able to use less resources than native Spark and can complete executions with less than 1\% error in terms of set deadlines.
+
+The capability to meet a particular deadline resorts to resource allocation problems (different resources required by different applications) or scheduling problems (more than one application running concurrently on the same hardware). Both the class of problems have been addressed by previous works on xSpark. 
+
+As mentioned earlier in this document, all these approaches implicitly assume that the \plan of an application is unique for any possible input dataset and input parameters, and this assumption is valid only for the most trivial applications. In fact, in general, application code embeds branches and loops, and different input data and parameter values may make the application traverse different program paths, and thus materialize a different \plan. For example, a Spark application can evaluate partial results through actions, and then use these partial results in conditional expressions of program branches.
+
+Symbolic execution tecnhiques are exhaustively employed in testing of software programs to help identify unsafe inputs that cause programs' crash. The use of these techniques to deliver full-fledged cover of all prossible dangerous inputs is severely limited by the exponential growth of computational resources as a consequence of \textit{path explosion}, due to the need to explore all the possible execution paths and solve all the corresponding \textit{path conditions} of a complex program that has many iterative loops and/or conditional branches in its code. As a consequence, we can rapidly resort to unsolvability. The work of this thesis relies on a lightweight symbolic execution  approach~\cite{Baresi-Quattrocchi-Denaro:2019} that values the solvability of symbolic evaluation-based tools on an efficiency base instead of a \textit{soundness and completeness} -- often practically unfeasible -- base.
+
+In this thesis work we investigate the resource allocation problem when running big data multi-DAG applications with deadline-based \qos constraints. The outcome of the research should give an answer the following preliminary research questions:
+\begin{enumerate}[\textit{Preliminary}\boldmath$RQ_1 : $] 
+	\item Does the solution provide an effective (w.r.t. obeying deadlines) runtime control of the Spark applications?
+	\item Does the solution provide an efficient (w.r.t. resource usage) runtime management of the application?
+\end{enumerate}
+
+The main reason behind this research and thesis work is to address the problem of executing multi-DAG deadline-constrained big data Spark applications, and give an answer to the above questions inherently associated to the identified problem.
+
+\section{Solution and Contribution}\label{sec:solution_contribution}
+To address the questions raised by the investigation of resource allocation problems related to running big data multi-DAG applications with deadline-based \qos constraints, we propose a solution that leverages \textit{symbolic execution} principle. 
+
+%alternative text
+%Our proposed solution integrates the use of an original combination of lightweight symbolic execution and search-based test generation to help identify the proper execution plans dynamically. It uses \dSymb, a novel technique that: 
+
+%i) automatically extracts all possible execution plans of a Spark application along with dedicated launcher programs and properly synthesized sets of input data that can be used for profiling, and 
+
+%ii) tunes the allocation of resources at runtime, based on the knowledge of the execution plans for which the path conditions hold. 
+
+%An initial set of empirical data is provided that support our research hypothesis that \dSymb can effectively complement \cSpark to help predict the execution duration and the dynamic allocation of resources.
+
+The solution covered by this thesis proposes the use of an original combination of lightweight symbolic execution and search-based test generation to properly infer the actual \plan, for a given set of input data and parameters~\cite{Baresi-Quattrocchi-Denaro:2019}. Our approach is called \dSymb (\textit{Symbolic Execution-driven Extraction of Parallel Execution Plans}) and relies on a lightweight symbolic execution of the application's code to derive a representative set of execution (path) conditions of the \plans in the application. It then uses these conditions with a search-based test generation algorithm to compute sample input datasets to execute each \plan and profile the application. The approach is supported by a prototype tool, also called \dSymb, that identifies the \model of applications, that is, the set of \plans, along with their respective path conditions and profiling data. It also incrementally evaluates the \model against the  concrete values of the symbolic variables, to stay aware of the \plans for which the path conditions continue to hold. This information can then be used to refine the actual \plan used to concretely execute the application. 
+
+Our proposed solution is built on a version of xSpark that does NOT support  multiple concurrent applications.
+
+
+To properly investigate the benefit of \dSymb, we integrated the tool into a new version of  \cSpark called \tool to understand how the dynamic selection of the best \plan can help in allocating resources more efficiently. A special-purpose component is now in charge of providing the worst-case \plan. At each execution step, the component feeds \cSpark with the actual worst-case \plan, chosen among those that are still feasible (i.e. the ones for which their path condition still holds true). 
+
+In light of the proposed concrete solution, we can now refine the research questions as follows:
+
+\begin{enumerate}[\boldmath$RQ_1 : $] 
+	\item Can \dSymb effectively control the execution of the Spark applications?
+	\item To what extend can \dSymb improve the resource allocation capabilities of
+	\cSpark, given it used a single, constant \plan?
+\end{enumerate}
+
+ The aim of this work is to give a contribution in terms of knowledge about the application of symbolic execution to the theoretical solution of the identified  problem, and a contribution in practical terms by providing: 
+ 
+ i) a modified xSpark platform to enable the runtime management of multi-DAG deadline-constrained big data applications and 
+ 
+ ii) a toolchain to identify the applications' execution paths,  extract their associated path conditions and generate a path condition evaluator, submit the application and its metadata to the modified xSpark platfom and collect performance data for evaluating the QoS of the execution. 
+
+\section*{Results and Future Works}\label{sec:results_future_works}
+The solution was tested with two applications:  \textit{Promocalls}\footnote{https://github.com/seepep/promocalls}, a paradigmatic example  develop at Deib Labs of Politecnico di Milano, and Louvain, a Spark implementation of the \textit{Louvain} algorithm~\cite{Louvain}, that we downloaded from a highly rated GitHub repository\footnote{https://github.com/Sotera/spark-distributed-louvain-modularity}. Louvain exploits \textit{GraphX}, a Spark graph processing library to represent large networks of users and analyze communities in these networks. 
+
+We evaluated  \dSymb by integrating it with \cSpark to control the parallel execution of two example Spark applications. 
+%alternative text:
+%Our evaluation addressed the two main research questions identified earlier and shows that: 
+
+%i) our approach extracts all the possible \plans generated from different application executions, and  
+
+%ii) \dSymb helps \cSpark reduce the number of deadline violations and allocate resources more efficiently.
+
+The results of the tests confirm the validity of our claim: \tool, being aware of the different PEPs generated by Spark applications, helps analyze and control their performance/execution time, and thus misses fewer deadlines and allocates resources more efficiently than xSpark.
+
+Future works will address the performance improvement of the profiling phase, by using branch-based selection criteria instead of the simple path-based solution adopted in our presented solution.
+

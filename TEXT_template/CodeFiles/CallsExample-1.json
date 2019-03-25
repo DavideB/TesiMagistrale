@@ -1,0 +1,141 @@
+{
+    "0": {
+        "RDDIds": {
+            "0": {
+                "callsite": "textFile at PromoCalls.java:34",
+                "name": "hdfs://10.0.0.4:9000//user/ubuntu/last24HoursLocalCalls.txt"
+            },
+            "1": {
+                "callsite": "textFile at PromoCalls.java:34",
+                "name": "hdfs://10.0.0.4:9000//user/ubuntu/last24HoursLocalCalls.txt"
+            }
+        },
+        "actual_records_read": 597900000.0,
+        "actual_records_write": 597900000.0,
+        "actualtotalduration": 43000.0,
+        "bytesread": 55618499408.0,
+        "byteswrite": 0.0,
+        "cachedRDDs": [],
+        "duration": 17000.0,
+        "genstage": false,
+        "id": 0.0,
+        "io_factor": 1.0,
+        "jobs": {
+            "0": {
+                "id-symb": "count_PromoCalls.java:34_0",
+                "stages": [
+                    0
+                ]
+            },
+            "1": {
+                "id-symb": "count_PromoCalls.java:42_0",
+                "stages": [
+                    1
+                ]
+            },
+            "2": {
+                "id-symb": "count_PromoCalls.java:45_0",
+                "stages": [
+                    2
+                ]
+            }
+        },
+        "monocoreduration": 705582.0,
+        "monocoretotalduration": 2170942.0,
+        "name": "count at PromoCalls.java:34",
+        "nominalrate": 847385.562556868,
+        "nominalrate_bytes": 78826414.8008311,
+        "numtask": 500,
+        "parentsIds": [],
+        "recordsread": 597900000.0,
+        "recordswrite": 0.0,
+        "shufflebytesread": 0.0,
+        "shufflebyteswrite": 0.0,
+        "shufflerecordsread": 0.0,
+        "shufflerecordswrite": 0.0,
+        "skipped": false,
+        "t_record_ta_executor": 0.0011801003512293025,
+        "totalduration": 43000.0,
+        "weight": 3.0384051747351832
+    },
+    "1": {
+        "RDDIds": {
+            "2": {
+                "callsite": "textFile at PromoCalls.java:35",
+                "name": "hdfs://10.0.0.4:9000//user/ubuntu/last24HoursLocalCalls.txt"
+            },
+            "3": {
+                "callsite": "textFile at PromoCalls.java:35",
+                "name": "hdfs://10.0.0.4:9000//user/ubuntu/last24HoursLocalCalls.txt"
+            },
+            "4": {
+                "callsite": "filter at PromoCalls.java:36",
+                "name": "MapPartitionsRDD"
+            }
+        },
+        "actual_records_read": 597900000.0,
+        "actual_records_write": 597900000.0,
+        "bytesread": 55618499408.0,
+        "byteswrite": 0.0,
+        "cachedRDDs": [],
+        "duration": 13000.0,
+        "genstage": false,
+        "id": 1.0,
+        "io_factor": 1.0,
+        "monocoreduration": 737425.0,
+        "name": "count at PromoCalls.java:42",
+        "nominalrate": 810794.3180662441,
+        "nominalrate_bytes": 75422584.54486898,
+        "numtask": 500,
+        "parentsIds": [],
+        "recordsread": 597900000.0,
+        "recordswrite": 0.0,
+        "shufflebytesread": 0.0,
+        "shufflebyteswrite": 0.0,
+        "shufflerecordsread": 0.0,
+        "shufflerecordswrite": 0.0,
+        "skipped": false,
+        "t_record_ta_executor": 0.001233358421140659,
+        "weight": 1.9935654473336273
+    },
+    "2": {
+        "RDDIds": {
+            "5": {
+                "callsite": "textFile at PromoCalls.java:44",
+                "name": "hdfs://10.0.0.4:9000//user/ubuntu/last24HoursAbroadCalls.txt"
+            },
+            "6": {
+                "callsite": "textFile at PromoCalls.java:44",
+                "name": "hdfs://10.0.0.4:9000//user/ubuntu/last24HoursAbroadCalls.txt"
+            },
+            "7": {
+                "callsite": "filter at PromoCalls.java:45",
+                "name": "MapPartitionsRDD"
+            }
+        },
+        "actual_records_read": 597900000.0,
+        "actual_records_write": 597900000.0,
+        "bytesread": 55618499408.0,
+        "byteswrite": 0.0,
+        "cachedRDDs": [],
+        "duration": 13000.0,
+        "genstage": false,
+        "id": 2.0,
+        "io_factor": 1.0,
+        "monocoreduration": 727935.0,
+        "name": "count at PromoCalls.java:45",
+        "nominalrate": 821364.5449112902,
+        "nominalrate_bytes": 76405859.60010166,
+        "numtask": 500,
+        "parentsIds": [],
+        "recordsread": 597900000.0,
+        "recordswrite": 0.0,
+        "shufflebytesread": 0.0,
+        "shufflebyteswrite": 0.0,
+        "shufflerecordsread": 0.0,
+        "shufflerecordswrite": 0.0,
+        "skipped": false,
+        "t_record_ta_executor": 0.001217486201705971,
+        "weight": 1.0
+    }
+}
