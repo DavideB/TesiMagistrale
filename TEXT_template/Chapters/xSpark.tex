@@ -35,34 +35,38 @@ Usually Spark applications are run multiple times, as they are reusable and long
 output record written and the nominal rate, defined as the number of
 records that a single core processes during one second of execution. 
 
-\lstinputlisting[
-firstline=1,
-lastline=19,
-float=tb,
-language=Python,
-tabsize=2,
-numbers=left,
-numberstyle=\tiny,
-stepnumber=1,
-numbersep=5pt,
-caption={Example of profiling data from a PageRank application.}, 
-captionpos=t,
-label=lst:profileFragment
-]{CodeFiles/profileFragment.json}
+%\lstinputlisting[
+%firstline=1,
+%lastline=19,
+%float=tb,
+%language=Python,
+%tabsize=2,
+%numbers=left,
+%numberstyle=\tiny,
+%stepnumber=1,
+%numbersep=5pt,
+%caption={Example of profiling data from a PageRank application.}, 
+%captionpos=t,
+%label=lst:profileFragment
+%]{CodeFiles/profileFragment.json}
 
-In \MyListing{lst:profileFragment} we can see a portion, relative to stage number three, of the profiling data related to a PageRank application executed in xSpark.
-For example, the duration field contains the serialized total duration of the tasks in
-milliseconds.
-At runtime, the annotated DAG allows us to comprehend how much
-work has already been completed and how much work still needs to
-be done. This means that xSpark can only optimize the allocation
-of the resources if all the executions of the same application use the
-same DAG. This might not always be the case, for example when the
+\begin{figure}
+	\centering
+	\includegraphics[width=\columnwidth]{Images/profile_fragment.pdf}  
+	\caption[Example of profiling data from a Louvain application]{Example of profiling data from a Louvain application.}
+	\label{fig:profileFragment}
+\end{figure}
+
+%In \MyListing{lst:profileFragment}
+In \MyFig{fig:profileFragment} we can see a fragment, relative to stage number zero, of the profiling data of a Louvain application executed in xSpark.
+The duration field contains the serialized total duration of the tasks in milliseconds.
+At runtime, the annotated DAG allows the xSpark scheduler function to know how much
+work was already completed and how much remains to be done. This means that xSpark can only optimize the allocation of the resources if all the executions of the same application use the same DAG. This might not always be the case, for example when the
 code contains branches or loops, because these might need to be resolved
 in different ways at runtime. If the application DAG at runtime differs from the one obtained during the profiling phase, xSpark is
 not able to estimate the amount of remaining work.
 The centralized control loop is activated before the execution of
-every stage, it uses an heuristic, explained in \MySec{subsec:heuristic}, in order
+every stage, it uses an heuristic, explained in \MySec{sec:heuristic}, in order
 to assign a deadline to the stage, calculate the amount of CPU cores
 that are needed to satisfy it, and assign cores to the allocated executors.
 The per-stage deadline takes into account the amount of work

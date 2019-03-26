@@ -63,15 +63,18 @@ The capability to meet a particular deadline resorts to resource allocation prob
 
 As mentioned earlier in this document, all these approaches implicitly assume that the \plan of an application is unique for any possible input dataset and input parameters, and this assumption is valid only for the most trivial applications. In fact, in general, application code embeds branches and loops, and different input data and parameter values may make the application traverse different program paths, and thus materialize a different \plan. For example, a Spark application can evaluate partial results through actions, and then use these partial results in conditional expressions of program branches.
 
-Symbolic execution tecnhiques are exhaustively employed in testing of software programs to help identify unsafe inputs that cause programs' crash. The use of these techniques to deliver full-fledged cover of all prossible dangerous inputs is severely limited by the exponential growth of computational resources as a consequence of \textit{path explosion}, due to the need to explore all the possible execution paths and solve all the corresponding \textit{path conditions} of a complex program that has many iterative loops and/or conditional branches in its code. As a consequence, we can rapidly resort to unsolvability. The work of this thesis relies on a lightweight symbolic execution  approach~\cite{Baresi-Quattrocchi-Denaro:2019} that values the solvability of symbolic evaluation-based tools on an efficiency base instead of a \textit{soundness and completeness} -- often practically unfeasible -- base.
+Symbolic execution tecnhiques are exhaustively employed in testing of software programs to help identify unsafe inputs that cause programs' crash. The use of these techniques to deliver full-fledged cover of all prossible dangerous inputs is severely limited by the exponential growth of computational resources as a consequence of \textit{path explosion}, due to the need to explore all the possible execution paths and solve all the corresponding \textit{path conditions} of a complex program that has many iterative loops and/or conditional branches in its code. As a consequence, we can rapidly resort to unsolvability. The work of this thesis relies on a lightweight symbolic execution  approach~\cite{Baresi-Quattrocchi-Denaro:2019} that values the solvability of symbolic evaluation-based tools on an \textit{efficiency} base instead of a \textit{soundness and completeness} -- often practically unfeasible -- base.
 
-In this thesis work we investigate the resource allocation problem when running big data multi-DAG applications with deadline-based \qos constraints. The outcome of the research should give an answer the following preliminary research questions:
-\begin{enumerate}[\textit{Preliminary}\boldmath$RQ_1 : $] 
-	\item Does the solution provide an effective (w.r.t. obeying deadlines) runtime control of the Spark applications?
-	\item Does the solution provide an efficient (w.r.t. resource usage) runtime management of the application?
-\end{enumerate}
+In this thesis work we investigate the resource allocation problem when running big data multi-DAG applications with deadline-based \qos constraints. 
+%The outcome of the research should give an answer to the  open questions of how to run multi-DAG, deadline-constrained Spark applications obeying the set deadaline, in an efficient way.
+%rimosse le seguenti RQ in questo punto perchè la soluzione non è ancora nota.
+%\begin{enumerate}[\textit{Preliminary}\boldmath$RQ_1 : $] 
+%	\item Does the solution provide an effective (w.r.t. obeying deadlines) runtime control of the Spark applications?
+%	\item Does the solution provide an efficient (w.r.t. resource usage) runtime management of the application?
+%\end{enumerate}
 
-The main reason behind this research and thesis work is to address the problem of executing multi-DAG deadline-constrained big data Spark applications, and give an answer to the above questions inherently associated to the identified problem.
+The main reason behind this research and thesis work is to address the problem of running multi-DAG, deadline-constrained Spark applications obeying the set deadaline, in an efficient way.
+%executing multi-DAG deadline-constrained big data Spark applications, and give an answer to the above questions inherently associated to the identified problem.
 
 \section{Solution and Contribution}\label{sec:solution_contribution}
 To address the questions raised by the investigation of resource allocation problems related to running big data multi-DAG applications with deadline-based \qos constraints, we propose a solution that leverages \textit{symbolic execution} principle. 
@@ -89,10 +92,9 @@ The solution covered by this thesis proposes the use of an original combination 
 
 Our proposed solution is built on a version of xSpark that does NOT support  multiple concurrent applications.
 
-
 To properly investigate the benefit of \dSymb, we integrated the tool into a new version of  \cSpark called \tool to understand how the dynamic selection of the best \plan can help in allocating resources more efficiently. A special-purpose component is now in charge of providing the worst-case \plan. At each execution step, the component feeds \cSpark with the actual worst-case \plan, chosen among those that are still feasible (i.e. the ones for which their path condition still holds true). 
 
-In light of the proposed concrete solution, we can now refine the research questions as follows:
+In light of the proposed solution, we have identified the followiing research questions:
 
 \begin{enumerate}[\boldmath$RQ_1 : $] 
 	\item Can \dSymb effectively control the execution of the Spark applications?
