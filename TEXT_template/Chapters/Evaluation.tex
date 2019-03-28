@@ -158,52 +158,15 @@ In both tables, we marked with $^\bullet$ and $^\dagger$ the paths that correspo
 	\label{Table:PerfPromo}
 \end{table}
 
-The effectiveness of \tool to control the execution of the tested applications, whose input were fed with large datasets, is measured by the results of our experiments that are summarized in Tables~\ref{Table:PerfPromo} and ~\ref{Table:Louvain}. These tables also include the results obtained with the original version of \cSpark, tuned on the worst and best case datasets above, and allow us to compare \tool against \cSpark. The meaning of each column of the tables is explained here below.
-
-For each profiled path $P_i$, column $Experiment$ indicates, the data obtained with \tool ($xSpark_s$), and \cSpark configured with the worst-case dataset ($xSpark_w$) and with the best-case dataset ($xSpark_b$), respectively. 
-In column $deadline$ we show the set deadline in seconds. 
-In column $exec\_time$ the actual execution time of the application is reported in seconds, as the average of $5$ iterations of the experiments (for a total of $120$ executions of PromoCalls (8 paths $\times$ 5 repetitions $\times$ 3 modes) and $90$ executions of Louvain). 
-In column $Violation$ we show the deadline violations (i.e., $exec_time > deadline$). 
-The error  is quantified in column $error$, defined as:
-%
-\[
-error = \frac{|deadline - exec\_time|}{deadline}\cdot100\%
-\]
-%
-that is, the percentage change vs. the deadline of the distance between the actual execution time and the deadline itself. In general the smaller $error$, the more efficient is the resource allocation, provided that the deadline is not violated, since less resources were used to meet the goal. On the other hand, if the deadline is violated, to smaller errors correspond shorter delays. Note that if the deadline were to be considered strict, the penalty for a violation would be considered of infinite value~\cite{shin1994real}.
-In column $core\_alloc$ we show the average core allocation during the execution, that is defined as:
-%
-\[
-core\_alloc = \frac{\sum_{s = 0}^{exec\_time} coresAllocatedAtSecond(s)}{exec\_time} 
-\]
-%
-
-We remark that the maximum value of $core\_alloc$ is $64$ core/second since $64$ was the number of cores provided by the cluster used for these experiments.
-
-In the last column $penalty$ we quantify the performance of \tool compared to  \cSpark when executing the same experiment: $penalty$ is defined as:
-\[
-penalty = 
-\begin{cases}
-\frac{ru_{WORST|BEST}-ru_{SEEPEP}}{ru_{SEEPEP}}\cdot 100\%,& \text{if } V = N \\
-\infty,              & \text{if } V = Y
-\end{cases}
-\]
-
-Since \tool never violated the deadline in our experiments, $pen$ measures how many resources were used by either $xSpark_w$ or $xSpark_b$ with respect to \tool. For example, $pen$ equal to 30\% means that \cSpark used a quantity of resources that was 30\% greater than the ones used by \tool. In contrast, a negative value for $pen$ implies that \cSpark used fewer resources than \tool. Finally, if the deadline is violated by either  $xSpark_w$ or  $xSpark_b$, we consider an infinite penalty~\cite{shin1994real}. 
-
-The data in Tables~\ref{Table:PerfPromo} and ~\ref{Table:Louvain} indicate that $xSpark_b$ violates the deadline in $7$ cases out of the $8$ paths in the experiments with PromoCalls, and 5 out of 6 paths in the experiments with Louvain. This is due to the mistakenly optimistic estimations made in the profiling phase. For example, if we consider PromoCalls, $xSpark_b$ computes  the local deadlines and the resource allocation as if the \plan always consisted of $3$ stages. This means that, in all the experiments but $P_1$ (that truly corresponds to the best-case path) \cSpark under allocated the resources, and the resulting execution time eventually exceeded the deadline by $51.9\%$. The maximum error, equals to $67.0\%$, is measured when executing $P_6$ (the worst-case path) where \cSpark experiences the largest mismatch between the estimations done during profiling and the actual work to do at runtime. 
-
-$xSpark_w$ does not violate any deadline, conversely it causes the earlier termination of the applications in most of the cases, with an error ($\epsilon$) between 1.2\% and 19.6\% in the case of PromoCalls, and between 1.3\% and 23\% in the case of Louvain. The earlier terminations are due to the profiling-based pessimistic estimations that mistakenly assume the worst-case path of the applications as representative of all the possible paths.
-In particular, when dealing with paths $P_1$, $P_4$, $P_5$, and $P_7$ of PromoCalls,  and  $P_0$, $P_3$, and $P_7$ of Louvain, the error is greater than $7\%$, leading  to significantly sub-optimal resource allocations. 
-
-In contrast, \tool does not violate any deadline and successfully provides an efficient resource allocation. The error measured in our experiments is on average equal to $3.6\%$ for PromoCalls, where $xSpark_b$ and $xSpark_w$ make an average error of $52.4\%$ and $8.1\%$, respectively, and equal to $2.9\%$ for Louvain, where $xSpark_b$ and $xSpark_w$ make an average error of $31.6\%$ and $8.9\%$, respectively.
-The data in columns $ca$ further witness that \tool outperforms the performance of $xSpark_b$ and $xSpark_w$. $xSpark_b$ underestimates allocated resources so as to make \cSpark violate the deadlines in all experiments, but path $P_1$ in PromoCalls and path $P_7$ in Louvain (the best cases). In this two cases, profiled data match what happens at runtime and, therefore, $xSpark_b$ outperforms both $xSpark_w$ and \tool and minimizes the error and used resources. Compared to $xSpark_w$, \tool allocates on average $25.5\%$ fewer resources in PromoCalls, and $13.9\%$ in Louvain.
 
 \begin{table}[htbp]
 	\centering
 	\begin{tabular}{r|c|c|c|c|c|c}
-		\toprule
-		\multicolumn{1}{c|}{\textbf{Experiment}}   & \multicolumn{1}{c|}{\boldmath$dln\,[s]$}  &  \multicolumn{1}{c|}{\boldmath$et\,[s]$}  & \multicolumn{1}{c|}{\boldmath$V$} &  \multicolumn{1}{c|}{\boldmath$\epsilon$}    & \multicolumn{1}{c|}{\boldmath$ca\,[\frac{c}{s}]$}  & \multicolumn{1}{c|}{\boldmath$pen$}   \\
+		%\toprule
+		\multicolumn{1}{c|}{\textbf{Experiment}}   &
+		%\multicolumn{1}{R{90}{1em}{|}}{\textbf{Experiment}} & \multicolumn{1}{c|}{\boldmath$deadline\,[s]$}  &  \multicolumn{1}{c|}{\boldmath$exec\_time\,[s]$}  & \multicolumn{1}{c|}{\boldmath$Violation$} &  \multicolumn{1}{c|}{\boldmath$error$}    & \multicolumn{1}{c|}{\boldmath$core\_alloc\,[\frac{core}{s}]$}  & \multicolumn{1}{c|}{\boldmath$penalty$}   \\
+		%\rotatebox{90}{\textbf{Experiment}}   &
+		\rotatebox{90}{\boldmath$deadline\,[s]$}  &  \rotatebox{90}{\boldmath$exec\_time\,[s]$}  & \rotatebox{90}{\boldmath$violation$} &  \rotatebox{90}{\boldmath$error$}    & \rotatebox{90}{\boldmath$core\_alloc\,[\frac{core}{s}]$}  & \rotatebox{90}{\boldmath$penalty$}   \\
 		\midrule
 		$xSpark_s$  & $184.3$   & $180.1$   & $N$   & $2.3\%$   & $35.9$   & $-$  \\
 		$P_0 \,\,xSpark_w$  & $184.3$   & $142.0$   & $N$   & $23.0\%$   & $46.1$   & $28.4\%$  \\
@@ -235,4 +198,64 @@ The data in columns $ca$ further witness that \tool outperforms the performance 
 	\vspace{-8mm}
 \end{table}
 
-In summary, our experiments suggest a positive answer to both the research questions $RQ_1$ and $RQ_2$, since \tool effectively and precisely controls the allocation of resources to execute PromoCalls and Louvain, keeping the execution within considered deadlines with significantly smaller errors and fewer resources than the original version of \cSpark.
+The effectiveness of \tool to control the execution of the tested applications, whose inputs were fed with large datasets, is measured by the results of our experiments that are summarized in Tables~\ref{Table:PerfPromo} and ~\ref{Table:Louvain}. These tables also include the results obtained with the original version of \cSpark, tuned on the worst and best case datasets above, and allow us to compare \tool against \cSpark. The meaning of each column of the tables is explained here below.
+
+For each profiled path $P_i$, column $Experiment$ indicates, the data obtained with \tool ($xSpark_s$), and \cSpark configured with the worst-case dataset ($xSpark_w$) and with the best-case dataset ($xSpark_b$), respectively. 
+In column $deadline$ we show the set deadline in seconds. 
+In column $exec\_time$ the actual execution time of the application is reported in seconds, as the average of $5$ iterations of the experiments (for a total of $120$ executions of PromoCalls (8 paths $\times$ 5 repetitions $\times$ 3 modes) and $90$ executions of Louvain). 
+In column $Violation$ we show the deadline violations (i.e., $exec_time > deadline$). 
+The error  is quantified in column $error$, defined as:
+%
+\[
+error = \frac{|deadline - exec\_time|}{deadline}\cdot100\%
+\]
+%
+that is, the percentage change vs. the deadline of the distance between the actual execution time and the deadline itself. In general the smaller $error$, the more efficient is the resource allocation, provided that the deadline is not violated, since less resources were used to meet the goal. On the other hand, if the deadline is violated, to smaller errors correspond shorter delays. Note that if the deadline were to be considered strict, the penalty for a violation would be considered of infinite value~\cite{shin1994real}.
+In column $core\_alloc$ we show the average core allocation during the execution, that is defined as:
+%
+\[
+core\_alloc = \frac{\sum_{s = 0}^{exec\_time} coresAllocatedAtSecond(s)}{exec\_time} 
+\]
+%
+
+We remark that the maximum value of $core\_alloc$ is $64$ core/second since $64$ is the number of cores provided by the cluster used for these experiments.
+
+In the last column $penalty$ we quantify the performance of \tool compared to  \cSpark when executing the same experiment: $penalty$ is defined as:
+\[
+penalty = 
+\begin{cases}
+\frac{ru_{WORST|BEST}-ru_{SEEPEP}}{ru_{SEEPEP}}\cdot 100\%,& \text{if } Violation = No \\
+\infty,              & \text{if } Violation = Yes
+\end{cases}
+\]
+
+Remarkably in our experiments, \tool never violated the deadline, hence $penalty$ measures the ampunt of resources that either $xSpark_w$ or $xSpark_b$ have used with respect to \tool. E.g. a $penalty$ of 30\% means that \cSpark used 30\% more resources than \tool. Instead, a negative $penalty$ means that \cSpark used less  resources than \tool. Lastly, when the deadline is violated by either $xSpark_w$ or $xSpark_b$, we consider $penalty$ to be infinite~\cite{shin1994real}. 
+
+As evidenced by the data in Tables~\ref{Table:PerfPromo} and ~\ref{Table:Louvain},  $xSpark_b$ violated the deadline in $7$ out of $8$ paths in the experiments with PromoCalls, and 5 out of 6 paths in the experiments with Louvain. This is due to the optimistic, yet wrong, estimations made in the profiling phase. To explain this behaviour, we have to consider that, for Promocalls, $xSpark_b$ computes the local deadlines and the resource allocation  as if the \plan always consisted of $3$ stages. As a consequence, in all the experiments but $P_1$ (which is the actual best-case path) \cSpark under allocates resources, resulting in the execution time eventually exceeding the deadline by as much as $51.9\%$. We measured the highest error displacement, equals to $67.0\%$, with the worst-case path $P_6$ where \cSpark faces the widest gap between the profiling estimations and the actual runtime workload. 
+
+In the same tables we can appreciate that $xSpark_w$ does not violate any deadline, on the contrary it causes the earlier termination of the applications in most of the cases, with an $error$ between 1.2\% and 19.6\% in the case of PromoCalls, and between 1.3\% and 23\% in the case of Louvain. This beahoiur depends on the pessimistic, yet wrong, estimations made in the profiling phase,  that mistakenly consider the worst-case path of the applications to represent all the possible paths.
+When considering paths $P_1$, $P_4$, $P_5$ and $P_7$ of PromoCalls,  and  $P_0$, $P_3$ and $P_7$ of Louvain, the error is greater than $7\%$, leading  to significantly sub-optimal resource allocations. 
+
+Remarkably, and on the contrary, \tool does not violate any deadline and successfully provides an efficient resource allocation. The average error measured in our experiments is equal to $3.6\%$ for PromoCalls, where for $xSpark_b$ and $xSpark_w$ is $52.4\%$ and $8.1\%$, respectively, and equal to $2.9\%$ for Louvain, where $xSpark_b$ and $xSpark_w$ have an average error of $31.6\%$ and $8.9\%$, respectively.
+
+The data in columns $core\_alloc$ confirm that \tool outperforms the performance of $xSpark_b$ and $xSpark_w$. $xSpark_b$ underestimates allocated resources so as to make \cSpark violate the deadlines in all experiments, except for path $P_1$ in PromoCalls and path $P_7$ in Louvain (the best cases). In the latter two cases, profiled data match the runtime workload, leading $xSpark_b$ to outperform both $xSpark_w$ and \tool, and minimizes the error and used resources. 
+
+\tool allocates an average of $25.5\%$ fewer resources in PromoCalls, and $13.9\%$ in Louvain, with respect to $xSpark_w$.
+
+From the results of our experiments we can evince a positive answer to both research questions $RQ_1$ and $RQ_2$, because \tool effectively and efficiently controls the allocation of resources during the execution of PromoCalls and Louvain, keeping the execution times within considered deadlines with significantly smaller errors and consuming a lower amount of resources than the original version of \cSpark.
+
+\section{Threats to Validity}
+\label{sec:ThreatsToValidity}
+
+We came up with a considerable trial effort, which has led us to perform a total of $226$ experiments on two different applications: a paradigmatic example and a real-world application taken from GitHub. We have shown that \dSymb was able to find a test-case for 14 out 16 of the application paths statically identified with symbolic execution, and demostrated how \cSpark could take advantage from the integration with \dSymb. In this section, we highlight the threats that may constrain the validity of our current results~\cite{wohlin2006empirical}:
+
+\textbf{Internal Threats}.  The test cases generated by dsymb have been slightly modified to increase the size of the datasets (without breaking the path conditions) for the execution of the experiments. This was done to ensure that we could test the desired paths and reliably obtain different repetitions of the experiments. However, data sets were not created in a totally random way. For this reason, we have preliminary executed some experiments with completely randomly created data sets and have obtained a similar result to the one presented.
+
+
+To run the experiments  we slightly modified the test cases generated by \dSymb to increase the size of the datasets (without breaking the path conditions). This way, we ensure to test the desired paths and reliably obtain different repetitions of the experiments. However, the datasets were not created completely randomly. For this reason, we conducted some preliminary experiments with datasets created completely randomly and obtained results similar to those presented. A broader set of experiments could be done to address this aspect as a matter for future developments.
+
+\textbf{External Threats}. A limit to the generality of the experiments and of the solutions tested may derive from the assumption underlying the choice of the Spark applications that we have considered. We have chosen two applications: one that uses Spark's core transformations and one that uses the \textit{GraphX} entry for graph analysis. To increase the degree of generality of evaluations, an extension of the number and variety of Spark applications is desirable, taking into consideration different types, such as those that exploit machine learning solutions and use SQL.
+
+Profiling as it is currently done constitutes an additional limitation of the approach used. In fact, a profiling session is required for each test case (launcher) found by \dSymb, but this could become a problem when the number of program paths becomes too high. A desirable direction that a future work could be directed at could be the improvement of this part of the tool chain. The improvement could be achieved through the adoption of a branch-based criterion to select profiling executions, replacing the current path-based criterion. The underpinning rationale is that since the execution of all the program branches assures that any possible \plan of the program has been profiled at least once; ; then, after profiling, we can map the profiled \plans on the paths (and then the path conditions) that include the corresponding program branches. This optimization might also mitigate the issues with paths that our test generator fails to exercize, such as the 2 uncovered paths that we experienced in Louvain.
+
+\textbf{Concept and Conclusion Threats}. The experiments demonstrate the validity of our idea, namely that the knowledge of the different \plans generated by the Spark applications helps to analyze and control their performance and execution time. Furthermore, we show that an approach based simply on knowledge of the worst case may be sufficient to limit the number of deadline violations, but is significantly less efficient than the one we obtain with our solution. The results obtained are statistically robust and they show only a small variance[??mettere riferimento ai dati risportati in appendice??]. 
