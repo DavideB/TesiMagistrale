@@ -18,7 +18,7 @@
 % ****************************************************************
 \PassOptionsToPackage{eulerchapternumbers,
 					listings,
-					drafting,
+					%drafting,
 				 	pdfspacing,
 					floatperchapter,
 					%linedheaders,
@@ -109,8 +109,18 @@
 \newcommand{\approach}{SEEPEP\xspace}
 \newcommand{\model}{PEP*\xspace}
 \newcommand{\sparsedata}{SDD\xspace}
-
 \newcommand\qos{\textit{QoS}\xspace}
+\usepackage{adjustbox}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+\newcolumntype{R}[2]{%
+	>{\adjustbox{angle=#1,lap=\width-(#2)}\bgroup}%
+	l%
+	<{\egroup}%
+}
+%\newcommand*\rot{\multicolumn{1}{R{90}{1em}}}
+%\newcommand*\rot{\multicolumn{1}{R{90}{1em}{|}}}
 % **********************************************************************
 
 
@@ -121,6 +131,8 @@
 	\usepackage{fontenc} 
 \PassOptionsToPackage{utf8}{inputenc} % latin9 (ISO-8859-9) = latin1+"Euro sign"
 	\usepackage{inputenc}				
+%\PassOptionsToPackage{utf8x}{inputenc} % ∞ char & others
+%\usepackage{inputenc}				
 
 \PassOptionsToPackage{autostyle,italian=guillemets,threshold=2}{csquotes}
  	\usepackage{csquotes}

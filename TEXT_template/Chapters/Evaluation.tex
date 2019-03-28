@@ -6,7 +6,233 @@
    \citetitle{verne_journey:1957} \citeyear{verne_journey:1957}
 \end{flushright} 
 
-\lettrine[lines=4]{\textcolor{purple}{I}}{n} chapter we describe the experiments we have performed to evaluate the feasibility and quality of the solution.
-The evaluation took place through the integration of \dSymb with \cSpark to control the parallel execution of the Spark applications
-\section{Experiments}\label{sec:experiments}
+\lettrine[lines=4]{\textcolor{purple}{I}}{n} this chapter we describe the experiments we have performed to evaluate the feasibility and quality of the solution and to address the research questions identified in \MySec{sec:problem_statement}.
+The evaluation took place through the integration of \dSymb with \cSpark to control the parallel execution of the Spark applications.
 
+\section{Test Environment}\label{sec:test_env}
+The test environment was built on Virtual Machines (from here onward VMs) of type   \textit{Standard\_D14\_v2}~\cite{AzureVMsizes}  provided by Microsoft Azure~\cite{AzureVM}, each of them equipped with $5$ CPUs, $112$ GiB of memory, $800$ GiB of local SSD memory and $6000$ Mbps of network bandwidth.
+This type of VM is optimized for memory usage, with a high memory/core ratio. The os and software packages installed on these VMs are: Canonical Ubuntu Server 14.04.5-LTS~\cite{Ubuntu}, Oracle Java 8~\cite{Java8}, Apache Hadoop 2.7.2~\cite{Hadoop}, Apache Spark 2.0.2~\cite{Spark} and xSpark. All VM software is stored in a 200 GiB virtual hard drive maintained in the persistent layer of an Azure Blob Storage [24]. The VMs are organized in clusters composed of $5$ VMs running HDFS (storing the input datasets) and $5$ hosting Apache Spark and xSpark ($5$ for old \cSpark and $5$ for $\cSpark+\dSymb$). The Spark cluster runs Spark application either under Spark with the default configuration or under  $\cSpark+\dSymb$ or \cSpark with the configuration parameters shown in  \MyFig{fig:xSparkDagSymbConfigParms} or in \MyFig{fig:xSparkConfigParms} respectively.
+\begin{figure}[thbp]
+	\centering
+	\includegraphics[width=\columnwidth]{images/xspark_symex_control_unlimited_parms.pdf}
+	\caption{control.json \tool configuration parameters.}
+	\label{fig:xSparkDagSymbConfigParms}
+\end{figure}
+\begin{figure}[thbp]
+	\centering
+	\includegraphics[width=\columnwidth]{images/xspark_control_unlimited_parms.pdf}
+	\caption{control.json \cSpark configuration parameters.}
+	\label{fig:xSparkConfigParms}
+\end{figure}
+
+\section{Tested Applications}\label{sec:tested_apps}
+We performed the experiments with two applications: PromoCalls and Louvain.
+PromoCalls is an example application that was developed at Politecnico di Milano in the Deib Labs\footnote{\url{https://github.com/seepep/promocalls}}.
+It resembles a batch application from a telecommunications company that calculates promotional discounts based on the number of daily domestic and foreign calls (calls longer than a parametric threshold) made by customers. 
+If a customer makes more than  $min_l$ local long calls or more than $min_a$ abroad long calls (or both) in a day, she may receive discounts on the calls made in that day, in the last $m$ months, or in the current month. 
+Only some or all of the discounts may be applied to the customer depending on the possible combinations of the trigger conditions. 
+PromoCalls uses Spark to efficiently analyze the data of all calls and calculate the applicable discounts.
+PromoCalls was used as a reference application during the development of SEEPEP and for a preliminary assessment of the accuracy of the technique used.
+
+Instead, to evaluate our approach to a real world application, we selected Louvain, a Spark implementation of the Louvain algorithm~\cite{Louvain} that we downloaded from a highly ranked GitHub repository\footnote{\url{https://github.com/Sotera/spark-distributed-louvain-modularity}}. Louvain uses \textit{GraphX}, a Spark library specialized for graph processing, suitable for representing large user networks and analyzing communities belonging to these networks.
+
+\section{Experiments}\label{sec:experiments}
+The experiments were performed on each of the applications subjected to the tests following the procedure described below, which consists of three distinct phases:
+\begin{enumerate}[$1 $]
+	\item Execution of \dSymb to obtain the path conditions and generate the launchers corresponding to each identified path.
+	\item Profiling the application subject to the test with the launchers generated and obtaining the plans for each path.
+	\item Use of tool to control the execution of the application by feeding it with input data sets larger than one order of magnitude compared to those used to generate the launchers.
+\end{enumerate}
+We have generated at least one large data set for each profiled path. We also set a reasonable deadline, that is $ 20\% $ longer than the minimum deadline, measured by running the application on Spark configured to use all the resources available on the clusters, and with the same data sets used in the experiments .
+
+The datasets were randomly generated using \dSymb.
+
+The comparison of \tool with the original \cSpark version has been done, for each application under test, identifying the best and worst cases, i.e. the paths with the lowest and highest number of stages\footnote{In case two paths have the same number of stages, we chose the path with the shortest/longest execution time  respectively for the best/worst case.}. In this way, we have quantified the error that \cSpark can generate due to the fact that it ignores which plan was used in the profiling phase.
+
+\subsection{Results}
+Results produced by\tool for PromoCalls and Louvain tools, up to the profiling phase, are shown in Tables~\ref{Table:Check:Promo} and ~\ref{Table:Check;Louvain}. Column $Path$ lists the paths found by \dSymb: $8$ unique paths were discovered in both cases. 
+
+Column $Found?$ shows whether or not \dSymb succeeded in generating a test case (and thus a corresponding profiling launcher) for the identified paths: it was successful in generating test cases for all path of PromoCalls, instead it was able to identify 6 out of 8 possible paths of Louvain\footnote{The two paths of Louvain for which \dSymb was not successful in identifying a corresponding test case were manually inspected. In any case, the proof that either these paths are infeasible, or an input datasets can be identified that exercise these paths, is missing.}. As a matter of fact, we currently have no clue if Louvain can execute these program paths or not.)
+
+Column $J$ (i.e., $Jobs$) and column $Stages$ report  the number of jobs and stages collected when profiling the launchers with \cSpark, which range between 3 and 9 jobs, 3 and 9 stages for Promocalls, and 11 and 17 jobs, 73 and 364 stages for Louvain, respectively. These data are not available for the two paths of Louvain for which \dSymb did not generate a launcher.
+In both tables, we marked with $^\bullet$ and $^\dagger$ the paths that correspond to the best and worst case, respectively, of each application. 
+
+\begin{table}[thbp]
+	\centering
+	\hspace{1cm}
+	\parbox{.48\linewidth}{
+		%\hspace{0.1cm}
+		\begin{tabular}{c|c|c|c}
+			\toprule
+			\multicolumn{1}{c|}{\textbf{Path}} &  \multicolumn{1}{c|}{\textbf{Found?}}   & \multicolumn{1}{c|}{\boldmath$\#Jobs$}  &  \multicolumn{1}{c}{\boldmath$\#Stages$}    \\
+			%\rotatebox{90}{\textbf{Path}} &  
+			%\rotatebox{90}{\textbf{Found?}}   & 
+			%\rotatebox{90}{\boldmath$\#Jobs$}  &  %\rotatebox{90}{\boldmath$\#Stages$}    \\
+			\midrule
+			$0$ & Yes  & 6 & 6  \\	
+			$1^{\bullet}$ & Yes  &  3 &  3 \\	
+			$2$ & Yes & 7  & 7 \\
+			$3$ & Yes &  6 & 6 \\
+			$4$ & Yes & 8  & 8  \\
+			$5$ & Yes & 7 & 7 \\
+			$6^{\dagger}$ & Yes & 9 & 9 \\
+			$7$ & Yes &  8 & 8 \\
+			\bottomrule
+		\end{tabular}
+		\caption{\boldmath$PromoCalls$ paths.}
+		\label{Table:Check:Promo}
+	}
+%\end{table}
+%\begin{table}[thbp]
+	\centering
+	\parbox{.48\linewidth}{
+		%	\vspace{0.78cm}
+		\vspace{2cm}
+		\hspace{0.5cm}
+		\begin{tabular}{c|c|c|c|c}
+			\toprule
+			\multicolumn{1}{c|}{\textbf{Path}} &  \multicolumn{1}{c|}{\textbf{Found?}}   & \multicolumn{1}{c|}{\boldmath$\#Jobs$}  &  \multicolumn{1}{c}{\boldmath$\#Stages$}    \\
+			%\rotatebox{90}{\textbf{Path}} &  
+			%\rotatebox{90}{\textbf{Found?}}   & 
+			%\rotatebox{90}{\boldmath$\#Jobs$}  &  %\rotatebox{90}{\boldmath$\#Stages$}    \\
+			\midrule
+			$0$ & Yes  &  11 & 149 \\	
+			$1$ & Yes & 17 & 364  \\	
+			$2^{\dagger}$ & Yes & 17 & 364 \\
+			$3$ & Yes & 11  & 149  \\
+			$4$ & No & - & - \\
+			$5$ & No & -  & - \\	
+			$6$ & Yes & 17 & 364 \\
+			$7^{\bullet}$ & Yes & 8  & 73  \\		
+			\bottomrule
+		\end{tabular}
+		\caption{\boldmath$Louvain$ paths.}
+		\label{Table:Check;Louvain}
+	}
+	
+\end{table}
+\begin{table}[tbhp]
+	\centering
+	\begin{tabular}{r|c|c|c|c|c|c}
+		%\toprule
+		\multicolumn{1}{c|}{\textbf{Experiment}}   &
+		%\multicolumn{1}{R{90}{1em}{|}}{\textbf{Experiment}} & \multicolumn{1}{c|}{\boldmath$deadline\,[s]$}  &  \multicolumn{1}{c|}{\boldmath$exec\_time\,[s]$}  & \multicolumn{1}{c|}{\boldmath$Violation$} &  \multicolumn{1}{c|}{\boldmath$error$}    & \multicolumn{1}{c|}{\boldmath$core\_alloc\,[\frac{core}{s}]$}  & \multicolumn{1}{c|}{\boldmath$penalty$}   \\
+		%\rotatebox{90}{\textbf{Experiment}}   &
+		\rotatebox{90}{\boldmath$deadline\,[s]$}  &  \rotatebox{90}{\boldmath$exec\_time\,[s]$}  & \rotatebox{90}{\boldmath$violation$} &  \rotatebox{90}{\boldmath$error$}    & \rotatebox{90}{\boldmath$core\_alloc\,[\frac{core}{s}]$}  & \rotatebox{90}{\boldmath$penalty$}   \\
+		\midrule
+		$xSpark_s$  & $91.4$   & $90.3$   & $N$   & $1.2\%$   & $41.3$   & $-$  \\
+		$P_0 \,\,xSpark_w$  & $91.4$   & $88.0$   & $N$   & $3.8\%$   & $53.0$   & $28.3\%$  \\
+		$xSpark_b$  & $91.4$   & $143.0$   & $Y$   & $56.4\%$   & $30.6$   & $\infty$  \\
+		\midrule
+		$xSpark_s$  & $56.4$   & $46.0$   & $N$   & $18.4\%$   & $56.2$   & $-$  \\
+		$P_1 \,\,xSpark_w$  & $56.4$   & $45.3$   & $N$   & $19.6\%$   & $56.5$   & $0.5\%$  \\
+		$xSpark_b$  & $56.4$   & $55.3$   & $N$   & $1.9\%$   & $38.2$   & $\text{-}33.6\%$  \\
+		\midrule
+		$xSpark_s$  & $107.8$   & $106.3$   & $N$   & $1.3\%$   & $39.2$   & $-$  \\
+		$P_2 \,\,xSpark_w$  & $107.8$   & $104.0$   & $N$   & $3.5\%$   & $52.1$   & $32.9\%$  \\
+		$xSpark_b$  & $107.8$   & $175.0$   & $Y$   & $62.4\%$   & $29.0$   & $\infty$  \\
+		\midrule
+		$xSpark_s$  & $87.5$   & $86.0$   & $N$   & $1.7\%$   & $42.4$   & $-$  \\
+		$P_3 \,\,xSpark_w$  & $87.5$   & $83.0$   & $N$   & $5.1\%$   & $53.5$   & $26.2\%$  \\
+		$xSpark_b$  & $87.5$   & $138.0$   & $Y$   & $57.8\%$   & $30.1$   & $\infty$  \\
+		\midrule
+		$xSpark_s$  & $147.6$   & $146.0$   & $N$   & $1.1\%$   & $37.0$   & $-$  \\
+		$P_4 \,\,xSpark_w$  & $147.6$   & $130.0$   & $N$   & $11.9\%$   & $51.4$   & $38.9\%$  \\
+		$xSpark_b$  & $147.6$   & $228.0$   & $Y$   & $54.5\%$   & $28.4$   & $\infty$  \\
+		\midrule
+		$xSpark_s$  & $77.0$   & $75.3$   & $N$   & $2.2\%$   & $41.0$   & $-$  \\
+		$P_5 \,\,xSpark_w$  & $77.0$   & $70.0$   & $N$   & $9.1\%$   & $53.7$   & $30.9\%$  \\
+		$xSpark_b$  & $77.0$   & $122.0$   & $Y$   & $58.4\%$   & $29.7$   & $\infty$  \\
+		\midrule
+		$xSpark_s$  & $122.2$   & $120.3$   & $N$   & $1.5\%$   & $39.2$   & $-$  \\
+		$P_6 \,\,xSpark_w$  & $122.2$   & $120.7$   & $N$   & $1.2\%$   & $43.6$   & $11.3\%$  \\
+		$xSpark_b$  & $122.2$   & $204.0$   & $Y$   & $67.0\%$   & $27.9$   & $\infty$  \\
+		\midrule
+		$xSpark_s$  & $112.1$   & $110.7$   & $N$   & $1.3\%$   & $39.2$   & $-$  \\
+		$P_7 \,\,xSpark_w$  & $112.1$   & $100.0$   & $N$   & $10.8\%$   & $53.0$   & $35.2\%$  \\
+		$xSpark_b$  & $112.1$   & $180.0$   & $Y$   & $60.6\%$   & $28.8$   & $\infty$  \\
+		
+		\bottomrule
+	\end{tabular}
+	\caption{Results for \boldmath$PromoCalls$}
+	\label{Table:PerfPromo}
+\end{table}
+
+The effectiveness of \tool to control the execution of the tested applications, whose input were fed with large datasets, is measured by the results of our experiments that are summarized in Tables~\ref{Table:PerfPromo} and ~\ref{Table:Louvain}. These tables also include the results obtained with the original version of \cSpark, tuned on the worst and best case datasets above, and allow us to compare \tool against \cSpark. The meaning of each column of the tables is explained here below.
+
+For each profiled path $P_i$, column $Experiment$ indicates, the data obtained with \tool ($xSpark_s$), and \cSpark configured with the worst-case dataset ($xSpark_w$) and with the best-case dataset ($xSpark_b$), respectively. 
+In column $deadline$ we show the set deadline in seconds. 
+In column $exec\_time$ the actual execution time of the application is reported in seconds, as the average of $5$ iterations of the experiments (for a total of $120$ executions of PromoCalls (8 paths $\times$ 5 repetitions $\times$ 3 modes) and $90$ executions of Louvain). 
+In column $Violation$ we show the deadline violations (i.e., $exec_time > deadline$). 
+The error  is quantified in column $error$, defined as:
+%
+\[
+error = \frac{|deadline - exec\_time|}{deadline}\cdot100\%
+\]
+%
+that is, the percentage change vs. the deadline of the distance between the actual execution time and the deadline itself. In general the smaller $error$, the more efficient is the resource allocation, provided that the deadline is not violated, since less resources were used to meet the goal. On the other hand, if the deadline is violated, to smaller errors correspond shorter delays. Note that if the deadline were to be considered strict, the penalty for a violation would be considered of infinite value~\cite{shin1994real}.
+In column $core\_alloc$ we show the average core allocation during the execution, that is defined as:
+%
+\[
+core\_alloc = \frac{\sum_{s = 0}^{exec\_time} coresAllocatedAtSecond(s)}{exec\_time} 
+\]
+%
+
+We remark that the maximum value of $core\_alloc$ is $64$ core/second since $64$ was the number of cores provided by the cluster used for these experiments.
+
+In the last column $penalty$ we quantify the performance of \tool compared to  \cSpark when executing the same experiment: $penalty$ is defined as:
+\[
+penalty = 
+\begin{cases}
+\frac{ru_{WORST|BEST}-ru_{SEEPEP}}{ru_{SEEPEP}}\cdot 100\%,& \text{if } V = N \\
+\infty,              & \text{if } V = Y
+\end{cases}
+\]
+
+Since \tool never violated the deadline in our experiments, $pen$ measures how many resources were used by either $xSpark_w$ or $xSpark_b$ with respect to \tool. For example, $pen$ equal to 30\% means that \cSpark used a quantity of resources that was 30\% greater than the ones used by \tool. In contrast, a negative value for $pen$ implies that \cSpark used fewer resources than \tool. Finally, if the deadline is violated by either  $xSpark_w$ or  $xSpark_b$, we consider an infinite penalty~\cite{shin1994real}. 
+
+The data in Tables~\ref{Table:PerfPromo} and ~\ref{Table:Louvain} indicate that $xSpark_b$ violates the deadline in $7$ cases out of the $8$ paths in the experiments with PromoCalls, and 5 out of 6 paths in the experiments with Louvain. This is due to the mistakenly optimistic estimations made in the profiling phase. For example, if we consider PromoCalls, $xSpark_b$ computes  the local deadlines and the resource allocation as if the \plan always consisted of $3$ stages. This means that, in all the experiments but $P_1$ (that truly corresponds to the best-case path) \cSpark under allocated the resources, and the resulting execution time eventually exceeded the deadline by $51.9\%$. The maximum error, equals to $67.0\%$, is measured when executing $P_6$ (the worst-case path) where \cSpark experiences the largest mismatch between the estimations done during profiling and the actual work to do at runtime. 
+
+$xSpark_w$ does not violate any deadline, conversely it causes the earlier termination of the applications in most of the cases, with an error ($\epsilon$) between 1.2\% and 19.6\% in the case of PromoCalls, and between 1.3\% and 23\% in the case of Louvain. The earlier terminations are due to the profiling-based pessimistic estimations that mistakenly assume the worst-case path of the applications as representative of all the possible paths.
+In particular, when dealing with paths $P_1$, $P_4$, $P_5$, and $P_7$ of PromoCalls,  and  $P_0$, $P_3$, and $P_7$ of Louvain, the error is greater than $7\%$, leading  to significantly sub-optimal resource allocations. 
+
+In contrast, \tool does not violate any deadline and successfully provides an efficient resource allocation. The error measured in our experiments is on average equal to $3.6\%$ for PromoCalls, where $xSpark_b$ and $xSpark_w$ make an average error of $52.4\%$ and $8.1\%$, respectively, and equal to $2.9\%$ for Louvain, where $xSpark_b$ and $xSpark_w$ make an average error of $31.6\%$ and $8.9\%$, respectively.
+The data in columns $ca$ further witness that \tool outperforms the performance of $xSpark_b$ and $xSpark_w$. $xSpark_b$ underestimates allocated resources so as to make \cSpark violate the deadlines in all experiments, but path $P_1$ in PromoCalls and path $P_7$ in Louvain (the best cases). In this two cases, profiled data match what happens at runtime and, therefore, $xSpark_b$ outperforms both $xSpark_w$ and \tool and minimizes the error and used resources. Compared to $xSpark_w$, \tool allocates on average $25.5\%$ fewer resources in PromoCalls, and $13.9\%$ in Louvain.
+
+\begin{table}[htbp]
+	\centering
+	\begin{tabular}{r|c|c|c|c|c|c}
+		\toprule
+		\multicolumn{1}{c|}{\textbf{Experiment}}   & \multicolumn{1}{c|}{\boldmath$dln\,[s]$}  &  \multicolumn{1}{c|}{\boldmath$et\,[s]$}  & \multicolumn{1}{c|}{\boldmath$V$} &  \multicolumn{1}{c|}{\boldmath$\epsilon$}    & \multicolumn{1}{c|}{\boldmath$ca\,[\frac{c}{s}]$}  & \multicolumn{1}{c|}{\boldmath$pen$}   \\
+		\midrule
+		$xSpark_s$  & $184.3$   & $180.1$   & $N$   & $2.3\%$   & $35.9$   & $-$  \\
+		$P_0 \,\,xSpark_w$  & $184.3$   & $142.0$   & $N$   & $23.0\%$   & $46.1$   & $28.4\%$  \\
+		$xSpark_b$  & $184.3$   & $222.3$   & $Y$   & $20.6\%$   & $15.2$   & $\infty$  \\
+		\midrule
+		$xSpark_s$  & $228.0$   & $227.0$   & $N$   & $0.4\%$   & $32.3$   & $-$  \\
+		$P_1 \,\,xSpark_w$  & $228.0$   & $222.0$   & $N$   & $2.6\%$   & $33.2$   & $2.8\%$  \\
+		$xSpark_b$  & $228.0$   & $329.3$   & $Y$   & $44.4\%$   & $7.4$   & $\infty$  \\
+		\midrule
+		$xSpark_s$  & $292.8$   & $290.7$   & $N$   & $0.7\%$   & $32.3$   & $-$  \\
+		$P_2 \,\,xSpark_w$  & $292.8$   & $289.0$   & $N$   & $1.3\%$   & $32.5$   & $0.5\%$  \\
+		$xSpark_b$  & $292.8$   & $429.0$   & $Y$   & $46.5\%$   & $7.0$   & $\infty$  \\
+		\midrule
+		$xSpark_s$  & $228.7$   & $226.0$   & $N$   & $1.2\%$   & $35.5$   & $-$  \\
+		$P_3 \,\,xSpark_w$  & $228.7$   & $211.3$   & $N$   & $7.6\%$   & $41.4$   & $16.6\%$  \\
+		$xSpark_b$  & $228.7$   & $292.0$   & $Y$   & $27.7\%$   & $16.0$   & $\infty$  \\
+		\midrule
+		$xSpark_s$  & $163.0$   & $159.4$   & $N$   & $2.2\%$   & $38.4$   & $-$  \\
+		$P_6 \,\,xSpark_w$  & $163.0$   & $158.0$   & $N$   & $3.0\%$   & $39.8$   & $3.8\%$  \\
+		$xSpark_b$  & $163.0$   & $242.0$   & $Y$   & $48.5\%$   & $8.5$   & $\infty$  \\
+		\midrule
+		$xSpark_s$  & $156.0$   & $139.0$   & $N$   & $10.9\%$   & $33.2$   & $-$  \\
+		$P_7 \,\,xSpark_w$  & $156.0$   & $131.5$   & $N$   & $15.7\%$   & $43.6$   & $31.4\%$  \\
+		$xSpark_b$  & $156.0$   & $152.7$   & $N$   & $2.1\%$   & $30.9$   & $-7.0\%$  \\
+		\bottomrule
+	\end{tabular}
+	\caption{Results for $Louvain$}
+	\label{Table:Louvain}
+	\vspace{-8mm}
+\end{table}
+
+In summary, our experiments suggest a positive answer to both the research questions $RQ_1$ and $RQ_2$, since \tool effectively and precisely controls the allocation of resources to execute PromoCalls and Louvain, keeping the execution within considered deadlines with significantly smaller errors and fewer resources than the original version of \cSpark.
