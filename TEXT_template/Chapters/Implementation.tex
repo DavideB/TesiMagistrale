@@ -388,18 +388,16 @@ label=lst:RDD_actions
 ]{CodeFiles/RDD_actions.scala}
 
 \section{Running Jobs}\label{sec:running_jobs}
-Jobs in xSpark are delimited by \textit{actions} (e.g. \textit{count(), collect()  etc...)} and are composed by a number of stages, that reflect the \textit{transformations} operated on data. Data are abstracted by Resilient Distributed Datasets (\textit{RDD's} classes, which contains specialized methods implementing the actions that are in charge of calling the method \texttt{runJob} of  the \texttt{SparkContext} instance \texttt{sc}. As explained in ~\MySec{sec:application_parameters}, the application parameters are associated with symbols and can be part of a path condition, as can the results of the Spark \textit{actions}. As we have seen in~\MySec{sec:symbols}, the result of a Spark \textit{action} is associated to a symbol through its \textit{Callsite}. Hence, we have changed the code of the methods implementing the \textit{actions} in the xSpark class \texttt{RDD} to store the result of the action in the local variable \texttt{res}, which is passed as a parameter in the call to the \texttt{resultComputed} method of the active \texttt{SparkContext} instance \texttt{sc}. The process to update the \tool \textit{Symbol Store} with the result of the action, which is associated to its unique symbol is explained in  \MySec{sec:symbols}.  
+Jobs in xSpark are delimited by \textit{actions} (e.g. \textit{count(), collect()  etc...)} and are composed by a number of stages, that reflect the \textit{transformations} operated on data. Data are abstracted by Resilient Distributed Datasets (\textit{RDD's} classes, which contains specialized methods implementing the actions that are in charge of calling the method \texttt{runJob} of  the \texttt{SparkContext} instance \texttt{sc}. As explained in ~\MySec{sec:application_parameters}, the application parameters are associated with symbols and can be part of a path condition, as can the results of the Spark \textit{actions}. As we have seen in~\MySec{sec:symbols}, the result of a Spark \textit{action} is associated to a symbol through its \textit{CallSite}. Hence, we have changed the code of the methods implementing the \textit{actions} in the xSpark class \texttt{RDD} to store the result of the action in the local variable \texttt{res}, which is passed as a parameter in the call to the \texttt{resultComputed} method of the active \texttt{SparkContext} instance \texttt{sc}. The process to update the \tool \textit{Symbol Store} with the result of the action, which is associated to its unique symbol, is explained in  \MySec{sec:symbols}.  
 
 %\section{Getting Results of Actions}\label{sec:getting_job_results}
 
 \section{The Python Tool xSpark-dagsymb}\label{sec:xspark_dagsymb}
 
-A tool exploiting symbolic execution techniques to safely run multi-dag
-applications in xSpark. (https://github.com/gioenn/xSpark-dagsymb.git).
+\textbf\textit{xSpark-dagsymb} is the name of the Python tool, which is part of the \tool solution that exploits symbolic execution techniques to safely run multi-dag applications in xSpark~\footnote{\url{https://github.com/gioenn/xSpark-dagsymb.git}}.
 It combines two distinct functionalities, application profiling and
 application execution, which are part of symbolic executor enabled
-xSpark applications lifecycle, in one integrated tool called
-\textbf{xSpark-dagsymb}.
+xSpark applications lifecycle, in one integrated tool.
 
 The tool is composed by ten principal modules:
 \textbf{xSpark\_dagsymb.py}, \textbf{launch.py}, \textbf{run.py},
@@ -434,28 +432,27 @@ sizeable logfiles.
 
 The Cloud environment must be properly initialized in order to allow
 \textbf{xSpark\_dagsymb} to access and modify resources in the cloud.
+We will present the procedure to setup the cloud environment on Microsoft Azure~\cite{Azure};
 
 \hypertarget{azure}{%
 \subparagraph{Azure}\label{azure}}
 
 Follow the instructions to create an identity called
 \href{https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal}{service
-principal} and assign to it all the required permissions:
+principal}\footnote{\url{https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal}} and assign to it all the required permissions:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi})}
 \item
 Check that your account has the
-\href{https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal?view=azure-cli-latest\#required-permissions}{required
-	permissions} to create an identity.
+\href{https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal?view=azure-cli-latest\#required-permissions}{required permissions}\footnote{\url{https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal?view=azure-cli-latest\#required-permissions}} to create an identity.
 \item
 Create an
 \href{https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal?view=azure-cli-latest\#create-an-azure-active-directory-application}{Azure
 	Active Directory application}
 \item
 Get the
-\href{https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal?view=azure-cli-latest\#get-application-id-and-authentication-key}{\emph{Application
-		ID} and an \emph{Authentication Key}}. The \emph{Application ID} and
+\href{https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal?view=azure-cli-latest\#get-application-id-and-authentication-key}{\emph{Application ID} and an \emph{Authentication Key}}\footnote{\url{https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal?view=azure-cli-latest\#get-application-id-and-authentication-key}}. The \emph{Application ID} and
 \emph{Authentication Key} values replace respectively the
 \emph{\textless{} AZ-APP-ID \textgreater{}} and the \emph{\textless{}
 	AZ-SECRET \textgreater{}} values in the credentials.json file
@@ -477,41 +474,45 @@ parameters. Information in the \textbf{credentials.json},
 customize the configuration object used by other modules during the
 application execution.
 
-\begin{itemize}
-\item
+%\begin{itemize}
+%\item
 AWS and/or MS-Azure Credentials: Open the
-\emph{credentials\_template.json} file and add the credentials for
-\textbf{xSpark\_dagsymb} (see instructions below to retrieve missing
+\emph{credentials\_template.json} file and add the credentials for \textbf{xSpark\_dagsymb} (see instructions below to retrieve missing
 credentials):
-
-\{ ``AzTenantId'': ``\textless{} AZ-TENANT-ID \textgreater{}'',
-``AzSubscriptionId'': ``\textless{} AZ-SUBSCRIPTION-ID
-\textgreater{}'', ``AzApplicationId'': ``\textless{} AZ-APP-ID
-\textgreater{}'', ``AzSecret'': ``\textless{} AZ-SECRET
-\textgreater{}'', ``AzPubKeyPath'': ``\textless{} AZ-PUB-KEY-PATH
-\textgreater{}'', ``AzPrvKeyPath'': ``\textless{} AZ-PRV-KEY-PATH
-\textgreater{}'', ``AwsAccessId'': ``\textless{} KEY-ID
-\textgreater{}'', ``AwsSecretId'': ``\textless{} ACCESS-KEY
-\textgreater{}'', ``KeyPairPath'': ``\textless{} KEY-PAIR-PATH
-\textgreater{}'' \}
-\end{itemize}
+\begin{figure}[thbp]
+	\centering
+	\includegraphics[width=\columnwidth]{images/xspark_dagsymb_credentials_template.pdf}
+	\caption{Credential template file.}
+	\label{fig:xspark_dagsymb_credentials_template}
+\end{figure}
+%\{ ``AzTenantId'': ``\textless{} AZ-TENANT-ID \textgreater{}'',
+%``AzSubscriptionId'': ``\textless{} AZ-SUBSCRIPTION-ID
+%\textgreater{}'', ``AzApplicationId'': ``\textless{} AZ-APP-ID
+%\textgreater{}'', ``AzSecret'': ``\textless{} AZ-SECRET
+%\textgreater{}'', ``AzPubKeyPath'': ``\textless{} AZ-PUB-KEY-PATH
+%\textgreater{}'', ``AzPrvKeyPath'': ``\textless{} AZ-PRV-KEY-PATH
+%\textgreater{}'', ``AwsAccessId'': ``\textless{} KEY-ID
+%\textgreater{}'', ``AwsSecretId'': ``\textless{} ACCESS-KEY
+%\textgreater{}'', ``KeyPairPath'': ``\textless{} KEY-PAIR-PATH
+%\textgreater{}'' \}
+%\end{itemize}
 
 Save the file as \emph{credentials.json}.
 
-\begin{itemize}
+%\begin{itemize}
 %\tightlist
-\item
+%\item
 How to retrieve your Azure credentials (using the Azure Command Line
 Interface):
-\end{itemize}
+%\end{itemize}
 
 Install the
-\href{https://docs.microsoft.com/it-it/cli/azure/install-azure-cli?view=azure-cli-latest}{Azure
-CLI}. Launch the following command from a console terminal:
+\href{https://docs.microsoft.com/it-it/cli/azure/install-azure-cli?view=azure-cli-latest}{Azure CLI}\footnote{\url{https://docs.microsoft.com/it-it/cli/azure/install-azure-cli?view=azure-cli-latest}}. Launch the following command from a console terminal:
 
 \begin{verbatim}
 $ az login
-Note, we have launched a browser for you to login. For old experience with device code, use "az login --use-device-code"
+Note, we have launched a browser for you to login. For old 
+experience with device code, use "az login --use-device-code"
 \end{verbatim}
 
 a browser authentication windows is open to allow you to login to the
@@ -519,20 +520,21 @@ Azure portal. If login is successful, you should get an output similar
 to the following:
 
 \begin{verbatim}
-You have logged in. Now let us find all the subscriptions to which you have access...
+You have logged in. Now let us find all the subscriptions to 
+which you have access...
 [
-{
-"cloudName": "AzureCloud",
-"id": "< AZ-SUBSCRIPTION-ID >",
-"isDefault": true,
-"name": "Microsoft Azure Sponsorship xx",
-"state": "Enabled",
-"tenantId": "< AZ-TENANT-ID >",
-"user": {
-"name": "*your_username*",
-"type": "user"
-}
-}
+	{
+	"cloudName": "AzureCloud",
+	"id": "< AZ-SUBSCRIPTION-ID >",
+	"isDefault": true,
+	"name": "Microsoft Azure Sponsorship xx",
+	"state": "Enabled",
+	"tenantId": "< AZ-TENANT-ID >",
+	"user": {
+		"name": "*your_username*",
+		"type": "user"
+		}
+	}
 ]
 \end{verbatim}
 
@@ -553,54 +555,30 @@ AZ-PRV-KEY-PATH \textgreater{}} in the \emph{credentials.json} file
 respectively with the fully qualified file name of the public and the
 private key.
 
-\begin{itemize}
-\item
-Setup the xSpark and the Virtual Machine Cloud environment: Edit the
-setup.json file to set the values to your need. The following is an
-example using Microsoft Azure VM Cloud Service:
+Setup the xSpark and the Virtual Machine Cloud environment: edit the 
+setup.json file to set the values to your need. An
+example using Microsoft Azure VM Cloud Service is shown in \MyFig{fig:xspark_dagsymb_setup}.
 
-\{ ``Provider'': ``AZURE'', ``VM'': \{ ``Core'': 16, ``Memory'':
-``100g'' \}, ``ProcessOnServer'': true, ``InstallPython3'': false,
-``Aws'': \{ ``SecurityGroup'': ``spark-cluster'', ``Region'':
-``us-west-2'', ``EbsOptimized'': true, ``Price'': ``0.015'',
-``InstanceType'': ``m3.medium'', ``AwsRegions'': \{ ``eu-west-1'':
-\{``ami'':``ami-bf61fbc8'', ``az'': ``eu-west-1c'', ``keypair'':
-``simone'', ``price'': ``0.0035'' \}, ``us-west-2'': \{``ami'':
-``ami-7f5ff81f'', ``snapid'': ``snap-4f38bf1c'', ``az'':
-``us-west-2c'', ``keypair'': ``simone2'', ``price'': ``0.015''\} \}
-\}, ``Azure'': \{ ``ResourceGroup'': ``xspark-davide-ap'',
-``SecurityGroup'': ``cspark-securitygroup2'', ``StorageAccount'': \{
-``Sku'': ``standard\_lrs'', ``Kind'': ``storage'', ``Name'':
-``xsparkstoragedavide1'' \}, ``Subnet'': ``default'', ``NodeSize'':
-``Standard\_D14\_v2\_Promo'', ``Network'': ``cspark-vnet2'',
-``Location'': ``australiaeast'', ``NodeImage'': \{ ``BlobContainer'':
-``vhd'', ``StorageAccount'': ``xsparkstoragedavide1'', ``Name'':
-``vm2-os.vhd'' \} \}, ``Spark'': \{ ``ExternalShuffle'': ``true'',
-``Home'': ``/opt/spark/'', ``LocalityWaitRack'': 0, ``CpuTask'': 1,
-``LocalityWaitProcess'': 1, ``LocalityWait'': 0, ``LocalityWaitNode'':
-0 \}, ``xSpark'': \{ ``Home'': ``/usr/local/spark/'' \}, ``SparkSeq'':
-\{ ``Home'': ``/opt/spark-seq/'' \}
-\item
-Setup the Spark Controller parameters: Edit the control.json file to
-set the values to your need. The following is an example:
+\begin{figure}[thbp]
+	\hspace*{-2.5cm}
+	\centering
+	\includegraphics[width=18cm]{images/xspark_dagsymb_setup.pdf}
+	\caption{Credential template file.}
+	\label{fig:xspark_dagsymb_setup}
+\end{figure}
 
-\{\\
-``Alpha'': 1.0, ``Beta'': 0.3, ``OverScale'': 2, ``K'': 50, ``Ti'':
-12000, ``TSample'': 500, ``Heuristic'': ``CONTROL\_UNLIMITED'',
-``CoreQuantum'': 0.05, ``CoreMin'': 0, ``CpuPeriod'': 100000 \}
-\end{itemize}
 
 \hypertarget{application-profiling}{%
 \subsection{Application Profiling}\label{application-profiling}}
 
 Profiling is the first logical phase of the performance testing
-lifecycle. In profiling mode, Benchmarks are run using the ``vanilla''
+lifecycle. In profiling mode, applications are run using the ``vanilla''
 Spark version. Then the \textbf{processing.py} module is called to
 analyze the logs and create the ``application profile'', that is a JSON
 file containing the annotated DAG of the executed stages plus additional
 information intended to be used by the controller in the execution
 phase. The \textbf{average\_runs.py} module is called to create a JSON
-profile called *dagsymbmarkname\textgreater-app.json containing the
+profile called <\emph{appname}>-app.json containing the
 average values of the ``n'' profiles obtained by running the same
 application ``n'' times. Finally, the file with the average profile is
 uploaded to the xSpark configuration directory on the master server.
@@ -608,9 +586,9 @@ uploaded to the xSpark configuration directory on the master server.
 \hypertarget{application-execution}{%
 \subsection{Application Execution}\label{application-execution}}
 
-Benchmarks are executed using
+Applications are executed using
 \href{https://github.com/gioenn/xSpark.git}{xSpark}, and require the
-application profile \emph{dagsymbmarkname}-app.json to be present in the
+application profile <\emph{appname}>-app.json to be present in the
 xSpark configuration directory. The name of the application and the
 parameters to modify its default configuration can either be specified
 as commandline arguments to the \emph{submit} command, or can be
@@ -701,8 +679,9 @@ where *args* is a set of command-specific arguments list or options.
 		syntax:}{setup command syntax:}}\label{setup-command-syntax}}
 
 \begin{verbatim}
-setup [hdfs | spark | all | generic] {[-n | --num-instances] *numinstances*} 
-{[-y |  --assume-yes]}
+setup [hdfs | spark | all | generic] 
+    {[-n | --num-instances] *numinstances*} 
+    {[-y |  --assume-yes]}
 \end{verbatim}
 
 where *numinstances* is the number of nodes to add to the specified
@@ -745,8 +724,9 @@ checks the status of all nodes in the specified cluster.
 		syntax:}{profile command syntax:}}\label{profile-command-syntax}}
 
 \begin{verbatim}
-profile [*exp_file_paths*] {[-r | --num-runs] *numruns*} {[-R | --reuse-dataset]} 
-{[-q | --spark-seq]}      
+profile [*exp_file_paths*] {[-r | --num-runs] *numruns*} 
+    {[-R | --reuse-dataset]} 
+    {[-q | --spark-seq]}      
 \end{verbatim}
 
 where *exp\_file\_paths* is a non-empty space separated list of
@@ -761,7 +741,8 @@ option instructs xSpark to use Spark data sequencing home directory.
 		syntax:}{submit command syntax:}}\label{submit-command-syntax}}
 
 \begin{verbatim}
-submit [*exp_file_paths*] {[-r | --num-runs] *numruns*} {[-R | --reuse-dataset]}       
+submit [*exp_file_paths*] {[-r | --num-runs] *numruns*} 
+     {[-R | --reuse-dataset]}      
 \end{verbatim}
 
 where *exp\_file\_paths* is a non-empty space separated list of
@@ -775,21 +756,14 @@ times to repeat the profiling for each experiment file (default is 1),
 		syntax:}{launch\_exp command syntax:}}\label{launch_exp-command-syntax}}
 
 \begin{verbatim}
-launch_exp {[-e | --executors] *numexecutors*} {[-b | --application] [pagerank | kmeans | 
-sort_by_key]} {[-v | --variable-parameter] *bpar*} 
-{[-n | --num-instances] *numinstances*} 
+launch_exp {[-e | --executors] *numexecutors*} 
+    {[-b | --application] [pagerank | kmeans | 
+    sort_by_key]} {[-v | --variable-parameter] *bpar*} 
+    {[-n | --num-instances] *numinstances*} 
 \end{verbatim}
 
-where *numexecutors* is an integer specifying the maximum number of
-executors to be used in the experiments, *bpar* is a variable parameter
-representing num\_v for pagerank, num\_of\_points for kmeans,
-scale\_factor for sort\_by\_key, \emph{-r} or \emph{--num-runs} is the
-number of times the specified application is run, \emph{-p} or
-\emph{--num-partitions} is the number of partitions for each task,
-\emph{-P} or \emph{--profile} instructs xSpark to perform the profiling
-at the end of the experiments, \emph{-R} or \emph{--reuse-dataset}
-option instructs xSpark to reuse (do not delete) application data in
-hdfs master node.
+where *numexecutors* is an integer specifying the maximum number of executors to be used in the experiments, *bpar* is a variable parameter representing num\_v for pagerank, num\_of\_points for kmeans, scale\_factor for sort\_by\_key, \emph{-r} or \emph{--num-runs} is the number of times the specified application is run, \emph{-p} or \emph{--num-partitions} is the number of partitions for each task,
+\emph{-P} or \emph{--profile} instructs xSpark to perform the profiling at the end of the experiments, \emph{-R} or \emph{--reuse-dataset} option instructs xSpark to reuse (do not delete) application data in hdfs master node.
 
 \hypertarget{log_profiling-command-syntax}{%
 \subparagraph{\texorpdfstring{\emph{log\_profiling} command
@@ -840,22 +814,11 @@ Create \emph{experiment.json} file with the the following contents:
 ``Mu'': 3.0, ``Sigma'': 0.0, ``MaxIterations'': 1, ``NumTrials'': 1\\
 \} \}
 \item
-Run the Profiling with 6 iterations:
+Run the Profiling with 5 iterations:
 
-\$ python3 xSpark\_dagsymb.py profile experiment.json -r 6 -R
+\$ python3 xSpark\_dagsymb.py profile experiment.json -r 5
 \item
 Run the Application Test with 5 iterations:
 
-\$ python3 xSpark\_dagsymb.py submit experiment.json -r 5 -R
+\$ python3 xSpark\_dagsymb.py submit experiment.json -r 5
 \end{enumerate}
-
-\hypertarget{todo}{%
-\subsection{TODO}\label{todo}}
-
-\begin{itemize}
-%\tightlist
-\item[$\square$]
-complete this file with installation instructions for AWS
-\item[$\square$]
-clean-up code
-\end{itemize}
