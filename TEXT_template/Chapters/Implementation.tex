@@ -26,7 +26,7 @@
 \end{figure}
 
 
-\subsection{Backgound: Current xSpark Heuristic}\label{sec:impl_background}
+\subsection{Background: Current xSpark Heuristic}\label{sec:impl_background}
 %We recap here the information given in \MySec{sec:heuristic}.
 
 xSpark uses a heuristic to compute per-stage deadlines and to estimate how many cores must be allocated for a stage to successfully fulfill the deadline. See \MySec{sec:heuristic} for an exhaustive description of its funcionality.
@@ -145,7 +145,7 @@ The above parameters can be calculated using the data inside the application jso
 Current implementation of the heuristic uses proxy \#1 (number of remaining stages to be executed). It calculates the value for each of the satisfiable profiles, and then selects the profile associated to the maximum value of the proxy. This way, we supply the “worst case” profile to the heuristic, so that the stage deadline is not overestimated and consequently the number of cores to be assigned for the next stage execution is not underestimated.
 
 \section{Application Parameters}\label{sec:application_parameters}
-As explained in Chapter~\ref{chap:ProblemAndSolution}, the application parameters can be part of a path condition as they could have been associated to a symbol by the symbolic executor part of \dSymb. Hence, we have introduced in xSpark a mechanism to intercept and store these application parameters in the \tool \textit{Symbol Store}, as shown in \MyFig{fig:xsparkdagsymb}.  \MyListing{lst:SparkSubmit_submit} shows part of the code of method \textit{submit} of xSpark class \textit{SparkSubmit}, that was modified in order to read the values of the application's runtime arguments passed via the Spark \textit{submit} command and write them as separate lines to textfile \textit{args.txt}. This file is a component of the \textit{\model Store}. Records from this file are read by xSpark at a later stage, when lazily executing the application by means of job scheduling.
+As explained in ~\MyChap{chap:ProblemAndSolution}, the application parameters can be part of a path condition as they could have been associated to a symbol by the symbolic executor part of \dSymb. Hence, we have introduced in xSpark a mechanism to intercept and store these application parameters in the \tool \textit{Symbol Store}, as shown in \MyFig{fig:xsparkdagsymb}.  \MyListing{lst:SparkSubmit_submit} shows part of the code of method \textit{submit} of xSpark class \textit{SparkSubmit}, that was modified in order to read the values of the application's runtime arguments passed via the Spark \textit{submit} command and write them as separate lines to textfile \textit{args.txt}. This file is a component of the \textit{\model Store}. Records from this file are read by xSpark at a later stage, when lazily executing the application by means of job scheduling.
  
 \lstinputlisting[
 firstline=1,
@@ -305,7 +305,7 @@ label=lst:HeuristicSymExControlUnlimited
 ]{CodeFiles/HeuristicSymExControlUnlimited.scala}
 Class \texttt{HeuristicSymExControlUnlimited} implementation code is shown in \MyListing{lst:HeuristicSymExControlUnlimited}. The \plan selection is made by choosing the \textit{"worst case"} among the valid \plans, that is the \plan with the maximum number of stages still to be executed, as we want to be conservative and minimize the deadline violations. If we wanted to optimize another performance indicator, like minimum  resource utilization in absence of strict deadline commitment, we could choose the profile with an average number of remaining stages to be executed. 
   
-\section{Symbols}\label{sec:guardevaluator}
+\section{Symbols}\label{sec:symbols}
 As mentioned in \MySec{sec:symbol_store}, we have to update the Symbol Store everytime a variable associated to a symbol is evaluated by the concrete execution of the application. We adopted the convention to identify a symbol by the string \textit{arg\_n} if it refers to a runtime application argument, where n is the position of the argument (e.g. \textit{arg\_$0$}), or by a string obtained by concatenating its \textit{CallSite} and \textit{IterationNumber} separated by an underscore character \textit{"\_"}, where \textit{Call Site} is a string obtained by concatenating \textit{SparkActionName}, \textit{ApplicationClassName}, \textit{SourceLanguageName:SourceLineNumber} separated by an underscore character \textit{"\_"}, and  \textit{IterationNumber} is an integer starting from $0$ and incremented everytime a call is originated by the same \textit{CallSite}. i.e. the same line of code is re-executed (e.g. due to iterative loops). Examples of formal symbol names are shown in \MyFig{fig:symbol_name}.
 \begin{figure}[tbhp]
 	\centering
@@ -317,7 +317,7 @@ As mentioned in \MySec{sec:symbol_store}, we have to update the Symbol Store eve
 	\label{fig:symbol_name}
 \end{figure}
 
-As stated above, a symbol is identified by its \textit{CallSite}. This means that to identify the symbols we have to intercept calls coming from their  \textit{CallSite}. Since the values associated to a symbol can only be changed by xSpark \textit{actions} which delimit jobs, we added code to the method \texttt{runJob} of class \texttt{DAGScheduler} to extract the \textit{CallSite}, generate a symbol and push it in the \textit{Symbol Store} everytime the method \texttt{runJob} is called. The code is shown in \MyListing{lst:DAGScheduler_runJob}. 
+As stated above, a symbol, if not associated to an application runtime argument,  is identified by its \textit{CallSite}. This means that to identify the symbols we have to intercept calls coming from their  \textit{CallSite}. Since the values associated to a symbol can only be changed by xSpark \textit{actions} which delimit jobs, we added code to the method \texttt{runJob} of class \texttt{DAGScheduler} to extract the \textit{CallSite}, generate a symbol and push it in the \textit{Symbol Store} everytime the method \texttt{runJob} is called. The code is shown in \MyListing{lst:DAGScheduler_runJob}. 
 \lstinputlisting[
 firstline=1,
 lastline=14,
@@ -340,7 +340,7 @@ This task is performed by the new method \texttt{resultComputed}, that was added
 Lastly, we have indeed modified the methods that execute the \textit{action}s in the \texttt{RDD} xSpark class by inserting a call to the method \texttt{resultComputed} of the \texttt{SparkContext} instance \texttt{sc} and passing to it the computed result of the action. 
 %In turn, the method \texttt{resultComputed} in SparkContext calls \texttt{resultComputed} of class \texttt{DAGSCheduler}. 
 
-Updating the value of \textit{symbols} in the \textit{Symbol Store} is not the only task fulfilled by the \texttt{resultComputed} method of class \texttt{DAGScheduler}. It also executes the method stored in the variable \texttt{guardEvalMethod} with the map of the known \textit{symbols} getting in return the variable \texttt{new\_validExecFlows} containing the list of valid profiles. It is also in charge of selecting the profile \texttt{appJson} to be used to run the next job. It fulfills this task by calling the method \texttt{nextProfile} of the \texttt{HeuristicSymExControlUnlimited} instance \texttt{heuristic} and passing to it the list of valid profiles. In returns, it gets the json profile to be used in the next job run, stored in the variable appJson. 
+Updating the value of \textit{symbols} in the \textit{Symbol Store} is not the only task fulfilled by the \texttt{resultComputed} method of class \texttt{DAGScheduler}. It also executes the method stored in the variable \texttt{guardEvalMethod} with the map of the known \textit{symbols} getting in return the variable \texttt{new\_validExecFlows} containing the list of valid profiles. It is also in charge of selecting the profile \texttt{appJson} to be used to run the next job. It fulfills this task by calling the method \texttt{nextProfile} of the \texttt{HeuristicSymExControlUnlimited} instance \texttt{heuristic} and passing to it the list of valid profiles. In returns, it gets the json profile to be used in the next job to be run, stored in the variable \texttt{appJson}. 
 
 The new and modified methods are shown in Listings \ref{lst:DAGScheduler_resultComputed}, \ref{lst:SparkContext_resultComputed}, \ref{lst:RDD_actions}.
 
@@ -387,10 +387,10 @@ captionpos=t,
 label=lst:RDD_actions
 ]{CodeFiles/RDD_actions.scala}
 
-\section{Scheduling Jobs}\label{sec:scheduling_jobs}
-Jobs in xSpark are delimited by \textit{actions} (e.g. \textit{count(), collect()  etc...)} and are composed by a number of stages, that reflect the \textit{transformations} operated on data. Data are abstracted as Resilient Distributed Datasets (\textit{RDD's} structures. As explained in Chapter~\ref{chap:Methodology}, the application parameters can be part of a path condition as they could have been associated to a symbol by the symbolic executor part of \dSymb. Hence, we have introduced in xSpark a mechanism to intercept and store these application parameters in the \tool \textit{Symbol Store}, as it was shown in \MyFig{fig:xsparkdagsymb}. The code listed in \MyListing{lst:SparkSubmit} was added to method \textit{submit} in xSpark module \textit{SparkSubmit} to read the values of the application's arguments passed via the Spark \textit{submit} command and write them as separate lines to textfile \textit{args.txt}. 
+\section{Running Jobs}\label{sec:running_jobs}
+Jobs in xSpark are delimited by \textit{actions} (e.g. \textit{count(), collect()  etc...)} and are composed by a number of stages, that reflect the \textit{transformations} operated on data. Data are abstracted by Resilient Distributed Datasets (\textit{RDD's} classes, which contains specialized methods implementing the actions that are in charge of calling the method \texttt{runJob} of  the \texttt{SparkContext} instance \texttt{sc}. As explained in ~\MySec{sec:application_parameters}, the application parameters are associated with symbols and can be part of a path condition, as can the results of the Spark \textit{actions}. As we have seen in~\MySec{sec:symbols}, the result of a Spark \textit{action} is associated to a symbol through its \textit{Callsite}. Hence, we have changed the code of the methods implementing the \textit{actions} in the xSpark class \texttt{RDD} to store the result of the action in the local variable \texttt{res}, which is passed as a parameter in the call to the \texttt{resultComputed} method of the active \texttt{SparkContext} instance \texttt{sc}. The process to update the \tool \textit{Symbol Store} with the result of the action, which is associated to its unique symbol is explained in  \MySec{sec:symbols}.  
 
-\section{Getting Results of Actions}\label{sec:getting_job_results}
+%\section{Getting Results of Actions}\label{sec:getting_job_results}
 
 \section{The Python Tool xSpark-dagsymb}\label{sec:xspark_dagsymb}
 
