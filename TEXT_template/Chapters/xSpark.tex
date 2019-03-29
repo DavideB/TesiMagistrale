@@ -63,8 +63,7 @@ The duration field contains the serialized total duration of the tasks in millis
 At runtime, the annotated DAG allows the xSpark scheduler function to know how much
 work was already completed and how much remains to be done. This means that xSpark can only optimize the allocation of the resources if all the executions of the same application use the same DAG. This might not always be the case, for example when the
 code contains branches or loops, because these might need to be resolved
-in different ways at runtime. If the application DAG at runtime differs from the one obtained during the profiling phase, xSpark is
-not able to estimate the amount of remaining work.
+in different ways at runtime. If the application DAG at runtime differs from the one obtained during the profiling phase, xSpark is not able to estimate the amount of remaining work.
 The centralized control loop is activated before the execution of
 every stage, it uses an heuristic, explained in \MySec{sec:heuristic}, in order
 to assign a deadline to the stage, calculate the amount of CPU cores
