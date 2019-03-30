@@ -304,9 +304,55 @@ captionpos=t,
 label=lst:HeuristicSymExControlUnlimited
 ]{CodeFiles/HeuristicSymExControlUnlimited.scala}
 Class \texttt{HeuristicSymExControlUnlimited} implementation code is shown in \MyListing{lst:HeuristicSymExControlUnlimited}. The \plan selection performed by method \texttt{nextProfile} is made by choosing the \textit{"worst case"} among the valid \plans, that is the \plan with the maximum number of stages still to be executed, as we want to be conservative and minimize the deadline violations. If we wanted to optimize another performance indicator, like minimum  resource utilization in absence of strict deadline commitment, we could choose the profile with an average number of remaining stages to be executed.
-\paragraph{Adapting Weigth Calculation to Multiple \plans}
-Selecting a new \plan at each job boundary for the execution of the upcoming job means that the scheduler has to deal with a situation where the previous stages of the application were executed under a different \plan than the newly selected one. The new \plan, in general, has a  different number of stages and different durations for each stage. When a stage is submitted for execution, the \texttt{heuristic} calculates its stage deadline $deadline(sk)$ and the stage related weights $w1(sk)$, $w2(sk)$ and $weigth(sk)$, as explained in \MySec{sec:heuristic}.
-  
+\paragraph{Stage Deadline Adjustment}
+As it was explained in \MySec{sec:heuristic}, when a stage is submitted for execution, the \texttt{heuristic} calculates its stage deadline $deadline(sk)$ based on the   $ApplicationDeadline$, the $SpentTime$, which is the sum of the durations of the stages already executed, and the stage weight $weigth(sk)$. Ou solution implies that we select potentially a new \plan at each new job execution boundary. This means that we have to face a  situation where \texttt{heuristic} calculates the new stage deadline using the value of $SpentTime$ that is calculated from the \plan used to execute the previous stages and the value of $weigth(sk)$ that is calculated from the newly selected \plan. This is incorrect, since the new \plan, in general, has its own number of stages and stage durations. We fixed it by changing the way  $SpentTime$ is calculated by the following changes to the xSpark code: i) \textit{case} class \texttt{SparkStageWeightSubmitted} in class \texttt{SparkListener.scala} shown in \MyListing{lst:SparkListener_SparkStageWeightSubmitted}, where optional formal parameter \texttt{executedstagesduration} is added to the \textit{case} class declaration ii) class method \texttt{submitMissingTasks} of class \texttt{DAGScheduler.scala} shown in \MyListing{lst:DAGScheduler_submitMissingTasks}, where the variable \texttt{executedstagesduration} is initialized with the cumulated duration of the executed stages from the selected \plan and passed as a parameter to the \texttt{SparkStageWeightSubmitted} and iii) method \texttt{onStageWeightSubmitted} in class \texttt{ControlEventListener.scala} shown in \MyListing{lst:ControlEventListener_onStageWeightSubmitted}, where \texttt{stageSubmitted.executedstagesduration} is used to calculate the value of the variable \texttt{totaldurationremaining}. 
+
+\lstinputlisting[
+firstline=1,
+lastline=7,
+%float=thb,
+language=scala,
+tabsize=2,
+numbers=left,
+numberstyle=\tiny,
+stepnumber=1,
+numbersep=5pt,
+caption={Changes to companion object case class SparkStageWeightSubmitted of class SparkListener.scala}, 
+captionpos=t,
+label=lst:SparkListener_SparkStageWeightSubmitted
+]{CodeFiles/SparkListener_SparkStageWeightSubmitted.scala}
+
+\lstinputlisting[
+firstline=1,
+lastline=40,
+%float=thb,
+language=scala,
+tabsize=2,
+numbers=left,
+numberstyle=\tiny,
+stepnumber=1,
+numbersep=5pt,
+caption={Changes to method submitMissingTasks of class DAGScheduler.scala}, 
+captionpos=t,
+label=lst:DAGScheduler_submitMissingTasks
+]{CodeFiles/DAGScheduler_submitMissingTasks.scala}
+
+\lstinputlisting[
+firstline=1,
+lastline=31,
+%float=thb,
+language=scala,
+tabsize=2,
+numbers=left,
+numberstyle=\tiny,
+stepnumber=1,
+numbersep=5pt,
+caption={Changes to method  onStageWeightSubmitted of class ControlEventListener.scala}, 
+captionpos=t,
+label=lst:ControlEventListener_onStageWeightSubmitted
+]{CodeFiles/ControlEventListener_onStageWeightSubmitted.scala}
+
+
 \section{Symbols}\label{sec:symbols}
 As mentioned in \MySec{sec:symbol_store}, we have to update the Symbol Store everytime a variable associated to a symbol is evaluated by the concrete execution of the application. We adopted the convention to identify a symbol by the string \textit{arg\_n} if it refers to a runtime application argument, where n is the position of the argument (e.g. \textit{arg\_$0$}), or by a string obtained by concatenating its \textit{CallSite} and \textit{IterationNumber} separated by an underscore character \textit{"\_"}, where \textit{Call Site} is a string obtained by concatenating \textit{SparkActionName}, \textit{ApplicationClassName}, \textit{SourceLanguageName:SourceLineNumber} separated by an underscore character \textit{"\_"}, and  \textit{IterationNumber} is an integer starting from $0$ and incremented everytime a call is originated by the same \textit{CallSite}. i.e. the same line of code is re-executed (e.g. due to iterative loops). Examples of formal symbol names are shown in \MyFig{fig:symbol_name}.
 \begin{figure}[tbhp]
@@ -396,12 +442,11 @@ As we have seen in~\MySec{sec:symbols}, the result of a Spark \textit{action} is
 
 %\section{Getting Results of Actions}\label{sec:getting_job_results}
 
-\section{\tool Python Tool}\label{sec:xspark_dagsymb}
+\section{Python Tool}\label{sec:xspark_dagsymb}
 
 \textbf\textit{xSpark-dagsymb} is the name of the Python tool, which is part of the \tool solution that exploits symbolic execution techniques to safely run multi-dag applications in xSpark~\footnote{\url{https://github.com/gioenn/xSpark-dagsymb.git}}.
 It combines two distinct functionalities, application profiling and
-application execution, which are part of symbolic executor enabled
-xSpark applications lifecycle, in one integrated tool.
+application execution, which are part of \tool application lifecycle, in one integrated tool.
 
 The tool is composed by ten principal modules:
 \textbf{xSpark\_dagsymb.py}, \textbf{launch.py}, \textbf{run.py},
@@ -466,9 +511,7 @@ described in the next paragraph.
 \hypertarget{tool-configuration}{%
 \subsection{Tool Configuration}\label{tool-configuration}}
 
-The \textbf{configure.py} module contains the Config class used to
-instantiate configuration objects that are initialized with default
-values. The \textbf{credentials.json} file contains \emph{Amazon EC2}
+The \textbf{configure.py} module contains the Config class (shown in \MyListing{lst:configure.py}) used to instantiate configuration objects that are initialized with default values. The \textbf{credentials.json} file, shown in \MyFig{fig:xspark_dagsymb_credentials_template}, contains \emph{Amazon EC2}
 and/or \emph{Microsoft Azure} credential information. The
 \textbf{setup.json} contains Cloud environment and \emph{Amazon EC2}
 and/or \emph{Microsoft Azure} image parameters. The
@@ -477,7 +520,20 @@ parameters. Information in the \textbf{credentials.json},
 \textbf{setup.json} and \textbf{control.json} files are used to
 customize the configuration object used by other modules during the
 application execution.
-
+\lstinputlisting[
+firstline=1,
+lastline=35,
+%float=thb,
+language=python,
+tabsize=2,
+numbers=left,
+numberstyle=\tiny,
+stepnumber=1,
+numbersep=5pt,
+caption={Fragment of configuration class Config.}, 
+captionpos=t,
+label=lst:configure.py
+]{CodeFiles/configure.py}
 %\begin{itemize}
 %\item
 AWS and/or MS-Azure Credentials: Open the
@@ -573,77 +629,76 @@ example using Microsoft Azure VM Cloud Service is shown in \MyFig{fig:xspark_dag
 
 
 \hypertarget{application-profiling}{%
-\subsection{Application Profiling}\label{application-profiling}}
-
-Profiling is the first logical phase of the performance testing
-lifecycle. In profiling mode, applications are run using the ``vanilla''
-Spark version. Then the \textbf{processing.py} module is called to
-analyze the logs and create the ``application profile'', that is a JSON
-file containing the annotated DAG of the executed stages plus additional
-information intended to be used by the controller in the execution
-phase. The \textbf{average\_runs.py} module is called to create a JSON
-profile called <\emph{appname}>-app.json containing the
-average values of the ``n'' profiles obtained by running the same
-application ``n'' times. Finally, the file with the average profile is
-uploaded to the xSpark configuration directory on the master server.
+\subsection{Application Profiling: PEP and PEP* generation}\label{application-profiling}}
+Profiling is the first logical phase of the \tool application
+lifecycle.  \tool allows to obtain the \model of an application. This can be obtained by launching the profiling command \textbf{profile\_symex} followed by the list of experiment files initialized with the input data set identified by the \dSymb \textit{launchers} and specifying the number $n$ of iterations the single experiment should be repeated. In profiling mode, experiments are run using the ``vanilla'' Spark version. Then the \textbf{processing.py} module is called to analyze the logs and create the ``application profile'', that is a JSON
+file containing the annotated DAG of the executed stages plus additional information intended to be used by the controller in the execution phase. For each experiment the  \textbf{average\_runs.py} module is called to create a JSON profile called  <\emph{appname}>.json containing the average values of the $n$ \plans obtained by iterating the 
+profiling $n$ times. When all the experiments have produced their averaged \plan, a JSON file also called \textit{JumboJSON} containing the \model is created by collecting the averaged \plans. Finally, the \model file and all the \plans are uploaded to the xSpark configuration directory of the xSpark master server. For example \textbf{python3 xSpark\_dagsymb profile\_symex -r 5 exp\_Louvain\_1.json  exp\_Louvain\_2.json  exp\_Louvain\_3.json} runs the profiling of application Louvain using launchers data sets 1, 2 and 3 and generating PEP files Louvain\_1.json, Louvain\_2.json, Louvain\_3.json and \model file Louvain.json.
 
 \hypertarget{application-execution}{%
 \subsection{Application Execution}\label{application-execution}}
-
 Applications are executed using
 \href{https://github.com/gioenn/xSpark.git}{xSpark}, and require the
-application profile <\emph{appname}>-app.json to be present in the
-xSpark configuration directory. The name of the application and the
-parameters to modify its default configuration can either be specified
-as commandline arguments to the \emph{submit} command, or can be
-inserted into JSON format ``experiment files'' and passed as commandline
-arguments to the \emph{launch\_exp} command. As an example, an
-experiment files for Pagerank , one for KMeans and one for
-AggregateByKey are shown here below:
+application profile <\emph{appname}>.json to be present in the
+xSpark configuration directory. The name of the application and the experiment
+parameters are inserted into a JSON format ``experiment files'' and passed as commandline
+arguments to the \emph{\textbf{profile\_symex}} command. As an example, an
+experiment files for CallsExample and one for Louvain are shown here below:
 
-PageRank experiment file example:
 
 \begin{verbatim}
+CallsExample experiment file example:
 {
-"Deadline": 148080,
-"BenchmarkName": "PageRank",
-"BenchmarkConf": {
-"NumOfPartitions": 1000,
-"NumV": 35000000,
-"Mu": 3.0,
-"Sigma": 0.0,
-"MaxIterations": 1,
-"NumTrials": 1     
-}
+    "Deadline": 91200,
+    "AppName": "CallsExample-6",
+    "MetaProfileName": "CallsExample",
+    "AppJar": "dagsymb/target/dagsymb-1.0-jar-with-dependencies.jar",
+    "AppClass": "it.polimi.deepse.dagsymb.launchers.Launcher",
+    "GuardEvaluatorClass": "it.polimi.deepse.dagsymb.examples
+                            .GuardEvaluatorPromoCallsFile",
+    "NumPartitions": 500,
+    "AppConf": {
+        "0": {"Name": "threshold", "Value" : 10060000},
+        "1": {"Name": "minLocalLongCalls", "Value" : 10060000},
+        "2": {"Name": "minAbroadLongCalls", "Value" : 10060000},
+        "3": {"Name": "pastMonths", "Value" : 2},
+        "4": {"Name": "last24HLocalCallsLength", "Value" : 16100000},
+        "5": {"Name": "last24HLocalCallsSize", "Value" : 16140000},
+        "6": {"Name": "last24HAbroadCallsLength", "Value" : 20030000},
+        "7": {"Name": "last24HAbroadCallsSize", "Value" : 20030000},
+        "8": {"Name": "MonthCallsLength", "Value" : 29900000},
+        "9": {"Name": "MonthCallsSize", "Value" :30000000}
+    }
 }
 \end{verbatim}
 
-KMeans experiment file example:
-
 \begin{verbatim}
+Louvain experiment file example:
 {
-"Deadline": 116369,
-"BenchmarkName": "KMeans",
-"BenchmarkConf": {
-"NumOfPartitions": 1000,
-"NumOfPoints": 100000000,
-"NumOfClusters": 10,
-"Dimensions": 20,
-"Scaling": 0.6,
-"MaxIterations": 1
-}
-}
-\end{verbatim}
-
-AggregateByKey experiment file example:
-
-\begin{verbatim}
-{
-"Deadline": 124000,
-"BenchmarkName": "scala-agg-by-key",
-"BenchmarkConf": {
-"ScaleFactor": 5
-}
+    "Deadline": 287040,
+    "AppName": "Louvain-2",
+    "MetaProfileName": "Louvain",
+    "AppRepo": "https://github.com/gioenn/louvain-modularity-spark.git",
+    "AppBranch": "master",
+    "AppJar": "louvain/target/louvainspark-1.0-SNAPSHOT-jar-with-
+                                                dependencies.jar",
+    "AppClass": "it.polimi.dagsymb.launchers.LouvainLauncher",
+    "GuardEvaluatorClass": "it.polimi.dagsymb.GuardEvaluatorLouvain",
+    "NumPartitions": 500,
+    "DataMultiplier" : 1,
+    "DeadlineMultiplier" : 1,
+    "AppConf": {
+        "0": {"Name": "inputFile", "Value" : "/louvain_2.txt"},
+        "1": {"Name": "outputFile", "Value" : "/louvain_2-out"},
+        "2": {"Name": "parallelism", "Value" : 500},
+        "3": {"Name": "minimumCompressionProgress", 
+              "Value" : -2147483648},
+        "4": {"Name": "progressCounter", "Value" : 2},
+        "5": {"Name": "delimiter", "Value" : ","},
+        "6": {"Name": "size", "Value" : 9999970},
+        "7": {"Name": "id1", "Value" : 0},
+        "8": {"Name": "id2", "Value" : 1}      		
+   }
 }
 \end{verbatim}
 
@@ -755,19 +810,17 @@ times to repeat the profiling for each experiment file (default is 1),
 \emph{-R} or \emph{--reuse-dataset} option instructs xSpark to reuse
 (not to delete) application data in hdfs master node.
 
-\hypertarget{launch_exp-command-syntax}{%
-\subparagraph{\texorpdfstring{\emph{launch\_exp} command
-		syntax:}{launch\_exp command syntax:}}\label{launch_exp-command-syntax}}
-
-\begin{verbatim}
-launch_exp {[-e | --executors] *numexecutors*} 
-    {[-b | --application] [pagerank | kmeans | 
-    sort_by_key]} {[-v | --variable-parameter] *bpar*} 
-    {[-n | --num-instances] *numinstances*} 
-\end{verbatim}
-
-where *numexecutors* is an integer specifying the maximum number of executors to be used in the experiments, *bpar* is a variable parameter representing num\_v for pagerank, num\_of\_points for kmeans, scale\_factor for sort\_by\_key, \emph{-r} or \emph{--num-runs} is the number of times the specified application is run, \emph{-p} or \emph{--num-partitions} is the number of partitions for each task,
-\emph{-P} or \emph{--profile} instructs xSpark to perform the profiling at the end of the experiments, \emph{-R} or \emph{--reuse-dataset} option instructs xSpark to reuse (do not delete) application data in hdfs master node.
+%\hypertarget{launch_exp-command-syntax}{%
+%\subparagraph{\texorpdfstring{\emph{launch\_exp} command
+%		syntax:}{launch\_exp command syntax:}}\label{launch_exp-command-syntax}}
+%
+%\begin{verbatim}
+%launch_exp {[-e | --executors] *numexecutors*} 
+%    {[-b | --application] [pagerank | kmeans | 
+%    sort_by_key]} {[-v | --variable-parameter] *bpar*} 
+%    {[-n | --num-instances] *numinstances*} 
+%\end{verbatim}
+%where *numexecutors* is an integer specifying the maximum number of executors to be used in the experiments, *bpar* is a variable parameter representing num\_v for pagerank, num\_of\_points for kmeans, scale\_factor for sort\_by\_key, \emph{-r} or \emph{--num-runs} is the number of times the specified application is run, \emph{-p} or \emph{--num-partitions} is the number of partitions for each task, \emph{-P} or \emph{--profile} instructs xSpark to perform the profiling at the end of the experiments, \emph{-R} or \emph{--reuse-dataset} option instructs xSpark to reuse (do not delete) application data in hdfs master node.
 
 \hypertarget{log_profiling-command-syntax}{%
 \subparagraph{\texorpdfstring{\emph{log\_profiling} command
@@ -790,9 +843,9 @@ time_analysis {[-i | --input-dir] *dir*}
 
 where \emph{dir} is the directory where the log files are located.
 
-\hypertarget{example-profile-and-test-pagerank}{%
+\hypertarget{example-profile-and-test-callsexample}{%
 \subsection{Example: Profile and Test
-	PageRank}\label{example-profile-and-test-pagerank}}
+	CallsExample}\label{example-profile-and-test-callsexample}}
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi})}
@@ -811,18 +864,67 @@ Create and initialize a spark cluster with 5 nodes:
 
 \$ python3 xSpark\_dagsymb.py setup spark -n 5
 \item
-Create \emph{experiment.json} file with the the following contents:
+Create \emph{CallsExample\_1.json CallsExample\_2.json} file with the following contents:
+\begin{verbatim}
+CallsExample_1.json:
+{
+    "Deadline": 150000,
+    "AppName": "CallsExample-1",
+    "MetaProfileName": "CallsExample",
+    "AppJar": "dagsymb/target/dagsymb-1.0-jar-with-dependencies.jar",
+    "AppClass": "it.polimi.deepse.dagsymb.launchers.Launcher",
+    "GuardEvaluatorClass": "it.polimi.deepse.dagsymb.examples.
+                            GuardEvaluatorPromoCallsFile",
+    "NumPartitions": 500,
+    "DataMultiplier" : 1,
+    "DeadlineMultiplier" : 1,
+    "AppConf": {
+        "0": {"Name": "threshold", "Value" : 1994},
+        "1": {"Name": "minLocalLongCalls", "Value" : 1994},
+        "2": {"Name": "minAbroadLongCalls", "Value" : 1994},
+        "3": {"Name": "pastMonths", "Value" : 0},
+        "4": {"Name": "last24HLocalCallsLength", "Value" : 1993},
+        "5": {"Name": "last24HLocalCallsSize", "Value" : 1993},
+        "6": {"Name": "last24HAbroadCallsLength", "Value" : 1993},
+        "7": {"Name": "last24HAbroadCallsSize", "Value" : 1993},
+        "8": {"Name": "MonthCallsLength", "Value" : 2990},
+        "9": {"Name": "MonthCallsSize", "Value" : 3000}
+    }
+}
 
-\{ ``Deadline'': 148080, ``BenchmarkName'': ``PageRank'',
-``BenchmarkConf'': \{ ``NumOfPartitions'': 1000, ``NumV'': 35000000,
-``Mu'': 3.0, ``Sigma'': 0.0, ``MaxIterations'': 1, ``NumTrials'': 1\\
-\} \}
+CallsExample_2.json:
+{
+    "Deadline": 150000,
+    "AppName": "CallsExample-2",
+    "MetaProfileName": "CallsExample",
+    "AppJar": "dagsymb/target/dagsymb-1.0-jar-with-dependencies.jar",
+    "AppClass": "it.polimi.deepse.dagsymb.launchers.Launcher",
+    "GuardEvaluatorClass": "it.polimi.deepse.dagsymb.examples.
+                        GuardEvaluatorPromoCallsFile",
+    "NumPartitions": 500,
+    "DataMultiplier" : 1,
+    "DeadlineMultiplier" : 1,
+    "AppConf": {
+        "0": {"Name": "threshold", "Value" : 2600},
+        "1": {"Name": "minLocalLongCalls", "Value" : 2600},
+        "2": {"Name": "minAbroadLongCalls", "Value" : 2600},
+        "3": {"Name": "pastMonths", "Value" : 0},
+        "4": {"Name": "last24HLocalCallsLength", "Value" : 2635},
+        "5": {"Name": "last24HLocalCallsSize", "Value" : 2635},
+        "6": {"Name": "last24HAbroadCallsLength", "Value" : 2635},
+        "7": {"Name": "last24HAbroadCallsSize", "Value" : 2635},
+        "8": {"Name": "MonthCallsLength", "Value" : 2990},
+        "9": {"Name": "MonthCallsSize", "Value" : 3000}
+    }
+}
+\end{verbatim}
+
 \item
 Run the Profiling with 5 iterations:
 
-\$ python3 xSpark\_dagsymb.py profile experiment.json -r 5
+\$ python3 xSpark\_dagsymb.py profile -r 5 CallsExample\_1.json CallsExample\_2.json
 \item
 Run the Application Test with 5 iterations:
 
-\$ python3 xSpark\_dagsymb.py submit experiment.json -r 5
+\$ python3 xSpark\_dagsymb.py submit  -r 5 CallsExample\_1.json CallsExample\_2.json
 \end{enumerate}
