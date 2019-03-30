@@ -266,7 +266,7 @@ captionpos=t,
 label=lst:DAGScheduler_symbol_store
 ]{CodeFiles/DAGScheduler_symbol_store.scala}
 \section{Heuristic}\label{sec:impl_heuristic}
-The heuristic used by xSpark is determined by the value of configuration parameter spark.control.heuristic and is an implementation of the class \texttt{HeuristicBase}, whose class diagram is shown in \MyFig{fig:heuristic_class_diagram}. In  \MyListing{lst:ControlEventListener_heuristic}, we can see that the heuristic \textit{HeuristicControl} is used by default, but other heuristics can be selected. \texttt{HeuristicFixed} and \texttt{HeuristicControlUnlimited} were already available in xSpark, while we implemented a new heuristic  \textbf{\texttt{HeuristicSymExControlUnlimited}} to exploit \textit{Symbolic Execution}.
+The heuristic used by xSpark is determined by the value of configuration parameter spark.control.heuristic and is an implementation of the class \texttt{HeuristicBase}, whose class diagram is shown in \MyFig{fig:heuristic_class_diagram}. In  \MyListing{lst:ControlEventListener_heuristic}, we can see that the heuristic \textit{HeuristicControl} is used by default, but other heuristics can be selected. \texttt{HeuristicFixed} and \texttt{HeuristicControlUnlimited} were already available in xSpark, while we implemented a new heuristic \textbf{\texttt{HeuristicSymExControlUnlimited}} to exploit \textit{Symbolic Execution}.
 \lstinputlisting[
 firstline=1,
 lastline=13,
@@ -288,7 +288,7 @@ label=lst:ControlEventListener_heuristic
 	\caption{Class diagram of Heuristic related classes.}
 	\label{fig:heuristic_class_diagram}
 \end{figure}
-\texttt{HeuristicSymExControlUnlimited} extends \texttt{HeuristicControlUnlimited} by adding the implementation of a new method, \texttt{nextProfile}, taking parameters \texttt{appJson}, the \texttt{JumboJSON} containing the \model representation and \texttt{valExFlows}, a list containing the id's of the valid application profiles,(i.e. the list of the \plans whose path conditions still hold true), and returns the \plan of the profile to be used during the executing of the next scheduled job.
+\texttt{HeuristicSymExControlUnlimited} extends \texttt{HeuristicControlUnlimited} by adding the implementation of a new method, \texttt{nextProfile}, taking parameters \texttt{appJson}, the \texttt{JumboJSON} containing the \model representation and \texttt{valExFlows}, a list containing the id's of the valid application profiles, (i.e. the list of the \plans whose path conditions still hold true), and returns the \plan of the profile to be used during the executing of the next scheduled job.
 \lstinputlisting[
 firstline=1,
 lastline=27,
@@ -303,7 +303,9 @@ caption={Class HeuristicSymExControlUnlimited.scala implementation.},
 captionpos=t,
 label=lst:HeuristicSymExControlUnlimited
 ]{CodeFiles/HeuristicSymExControlUnlimited.scala}
-Class \texttt{HeuristicSymExControlUnlimited} implementation code is shown in \MyListing{lst:HeuristicSymExControlUnlimited}. The \plan selection is made by choosing the \textit{"worst case"} among the valid \plans, that is the \plan with the maximum number of stages still to be executed, as we want to be conservative and minimize the deadline violations. If we wanted to optimize another performance indicator, like minimum  resource utilization in absence of strict deadline commitment, we could choose the profile with an average number of remaining stages to be executed. 
+Class \texttt{HeuristicSymExControlUnlimited} implementation code is shown in \MyListing{lst:HeuristicSymExControlUnlimited}. The \plan selection performed by method \texttt{nextProfile} is made by choosing the \textit{"worst case"} among the valid \plans, that is the \plan with the maximum number of stages still to be executed, as we want to be conservative and minimize the deadline violations. If we wanted to optimize another performance indicator, like minimum  resource utilization in absence of strict deadline commitment, we could choose the profile with an average number of remaining stages to be executed.
+\paragraph{Adapting Weigth Calculation to Multiple \plans}
+Selecting a new \plan at each job boundary for the execution of the upcoming job means that the scheduler has to deal with a situation where the previous stages of the application were executed under a different \plan than the newly selected one. The new \plan, in general, has a  different number of stages and different durations for each stage. When a stage is submitted for execution, the \texttt{heuristic} calculates its stage deadline $deadline(sk)$ and the stage related weights $w1(sk)$, $w2(sk)$ and $weigth(sk)$, as explained in \MySec{sec:heuristic}.
   
 \section{Symbols}\label{sec:symbols}
 As mentioned in \MySec{sec:symbol_store}, we have to update the Symbol Store everytime a variable associated to a symbol is evaluated by the concrete execution of the application. We adopted the convention to identify a symbol by the string \textit{arg\_n} if it refers to a runtime application argument, where n is the position of the argument (e.g. \textit{arg\_$0$}), or by a string obtained by concatenating its \textit{CallSite} and \textit{IterationNumber} separated by an underscore character \textit{"\_"}, where \textit{Call Site} is a string obtained by concatenating \textit{SparkActionName}, \textit{ApplicationClassName}, \textit{SourceLanguageName:SourceLineNumber} separated by an underscore character \textit{"\_"}, and  \textit{IterationNumber} is an integer starting from $0$ and incremented everytime a call is originated by the same \textit{CallSite}. i.e. the same line of code is re-executed (e.g. due to iterative loops). Examples of formal symbol names are shown in \MyFig{fig:symbol_name}.
@@ -388,11 +390,13 @@ label=lst:RDD_actions
 ]{CodeFiles/RDD_actions.scala}
 
 \section{Running Jobs}\label{sec:running_jobs}
-Jobs in xSpark are delimited by \textit{actions} (e.g. \textit{count(), collect()  etc...)} and are composed by a number of stages, that reflect the \textit{transformations} operated on data. Data are abstracted by Resilient Distributed Datasets (\textit{RDD's} classes, which contains specialized methods implementing the actions that are in charge of calling the method \texttt{runJob} of  the \texttt{SparkContext} instance \texttt{sc}. As explained in ~\MySec{sec:application_parameters}, the application parameters are associated with symbols and can be part of a path condition, as can the results of the Spark \textit{actions}. As we have seen in~\MySec{sec:symbols}, the result of a Spark \textit{action} is associated to a symbol through its \textit{CallSite}. Hence, we have changed the code of the methods implementing the \textit{actions} in the xSpark class \texttt{RDD} to store the result of the action in the local variable \texttt{res}, which is passed as a parameter in the call to the \texttt{resultComputed} method of the active \texttt{SparkContext} instance \texttt{sc}. The process to update the \tool \textit{Symbol Store} with the result of the action, which is associated to its unique symbol, is explained in  \MySec{sec:symbols}.  
+Jobs in xSpark are delimited by \textit{actions} (e.g. \textit{count(), collect()  etc...)} and are composed by a number of stages, that reflect the \textit{transformations} operated on data. Data are abstracted by Resilient Distributed Datasets (\textit{RDD's} classes, which contains specialized methods implementing the actions that are in charge of calling the method \texttt{runJob} of  the \texttt{SparkContext} instance \texttt{sc}. 
+%As explained in ~\MySec{sec:application_parameters}, the application parameters are associated with symbols and can be part of a path condition, as can the results of the Spark \textit{actions}. 
+As we have seen in~\MySec{sec:symbols}, the result of a Spark \textit{action} is associated to a symbol through its \textit{CallSite}. Hence, we have changed the code of the methods implementing the \textit{actions} in the xSpark class \texttt{RDD} to store the result of the action in the local variable \texttt{res}, which is passed as a parameter in the call to the \texttt{resultComputed} method of the active \texttt{SparkContext} instance \texttt{sc}. The process to update the \tool \textit{Symbol Store} with the result of the action, which is associated to a unique symbol, is explained in  \MySec{sec:symbols}.  
 
 %\section{Getting Results of Actions}\label{sec:getting_job_results}
 
-\section{The Python Tool xSpark-dagsymb}\label{sec:xspark_dagsymb}
+\section{\tool Python Tool}\label{sec:xspark_dagsymb}
 
 \textbf\textit{xSpark-dagsymb} is the name of the Python tool, which is part of the \tool solution that exploits symbolic execution techniques to safely run multi-dag applications in xSpark~\footnote{\url{https://github.com/gioenn/xSpark-dagsymb.git}}.
 It combines two distinct functionalities, application profiling and
