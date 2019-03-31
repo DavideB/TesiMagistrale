@@ -759,7 +759,9 @@ on the guest OS or library dependencies that need to be managed.
 %\end{figure}
 
 \section{Symbolic Execution}
-In computer science, the term symbolic execution refers to a software program analysis technique used to determine which data inputs cause These execution of each part of a program. It was introduced in the mid '70s~\cite{K-ICRS75,SELECT-ICRS75,K-CACM76,H-TSE77} mainly to test whether a software program could violate certain properties, e.g. that no divisions by zero are performed, no NULL pointers get dereferenced, no access to protected data can happen by unathorized users, etc. In general, it's not possible to decide every possible program property by means of automated checks, for example we cannot predict the target of an indirect jump. %, as it depends on values that are known at runtime. 
+In this section we present an overview of \textit{symbolic execution}, taken primarily from a research work of Baldoni et al~\cite{Baldoni:2018:SSE:3212709.3182657}.
+
+In computer science, the term symbolic execution refers to a software program analysis technique used to determine which data inputs cause These execution of each part of a program. It was introduced in the mid '70s~\cite{K-ICRS75,SELECT-ICRS75,K-CACM76,H-TSE77} mainly to test whether a software program could violate certain properties, e.g. that no divisions by zero are performed, no \texttt{null} pointers get dereferenced, no access to protected data can happen by unathorized users, etc. In general, it's not possible to decide every possible program property by means of automated checks, for example we cannot predict the target of an indirect jump. %, as it depends on values that are known at runtime. 
 In practice, approximate and heuristic-based analyses are used in many cases, even in the field of mission-critical and security applications.
 
 Software testing is performed to check that certain program properties hold for any possible usage scenario. A viable approach would be to test the program using a wide range of different, possibly random inputs. As the problem may occur only for very specific input values, we need to automate the exploration of the domain of the possible input data. 
@@ -773,13 +775,14 @@ When a program is run with a specific set of input data (a concrete execution), 
 Symbolic execution techniques have been emphasized to a wide audience following the DARPA announcement in 2013 at the Cyber Grand Challenge, a two-year competition pursuing the creation of automatic systems for vulnerability detection, exploitation, and patching in near real-time~\cite{ANGR-SSP16}.
 More important, symbolic execution based engines have been running 24/7 in the testing process of many Microsoft applications since 2008, discovering nearly 30\% of all the flaws discovered by file fuzz testing during the development of Windows 7, which other program analyses and blackbox testing techniques missed~\cite{SAGE-QUEUE12}.
 
-\paragraph{An Introductory Example}
+\paragraph{Example}
 
 
 \label{symbolic-execution-example}
 \begin{figure}[t]
 	\begin{center}
 		\begin{tabular}{c}
+			\hspace{-4.5cm}
 			\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
 			1.  void foo(int a, int b) {
 			2.     int x = 1, y = 0;
@@ -804,11 +807,11 @@ With reference to the C code in \MyFig{fig:example-1}, let's say we want to disc
 Going further into details, a symbol $\alpha_i$ is associated to each value that cannot be resolved by a static analysis of the code, e.g. an actual parameter of a function or data read from an input stream. At any time, the symbolic execution engine maintains a state $(stmt,~\sigma,~\pi)$ where:
 
 \begin{itemize}
-	\item $stmt$ is the next statement to evaluate. At this time being, we assume that $stmt$ can be an assignment, a conditional branch, or a jump.
+	\item $stmt$ is the next statement to evaluate. At this time, we assume that $stmt$ can be an assignment, a conditional branch, or a jump.
 	
-	\item $\sigma$ is a {\em symbolic store} that associates program variables with either expressions over concrete values or symbolic values $\alpha_i$.
+	\item $\sigma$ is a {\em symbolic store} that associates program variables with concrete values of expressions or symbolic values $\alpha_i$.
 	
-	\item $\pi$ denotes the {\em path constraints}, i.e., it is a formula expressing a set of assumptions on the symbols $\alpha_i$ as a result of branches taken in the execution to reach $stmt$. At the start of the analysis, $\pi=true$.
+	\item $\pi$ identifies the {\em path constraints}, i.e., it is a formula expressing a set of assumptions on the symbols $\alpha_i$ as a result of branches taken in the execution to reach $stmt$. At the start of the analysis, $\pi=true$.
 \end{itemize}
 
 \noindent Depending on $stmt$, the symbolic engine changes the state as follows:
@@ -823,7 +826,7 @@ Going further into details, a symbol $\alpha_i$ is associated to each value that
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=0.975\columnwidth]{images/execution-tree.eps} 
-	\caption{Symbolic execution tree of function {\texttt foo} given in \MyFig{fig:example-1}. Each execution state, labeled with an upper case letter, shows the statement to be executed, the symbolic store $\sigma$, and the path constraints $\pi$. Leaves are evaluated against the condition in the {\texttt assert} statement. }
+	\caption{Symbolic execution tree of function {\texttt foo} given in \MyFig{fig:example-1}. Each execution state, labeled with an upper case letter, shows the statement to be executed, the symbolic store $\sigma$, and the path constraints $\pi$. Leaves are evaluated against the condition in the {\texttt assert} statement. Image courtesy of Association for Computing Machinery~\cite{Baldoni:2018:SSE:3212709.3182657}.}
 	%For the sake of presentation the conjunction of constraints is shown as a list of constraints. }
 	\label{fig:example-symbolic-execution}
 	\vspace{-1mm}
@@ -839,7 +842,7 @@ will make {\texttt assert} fail. An instance of unsafe input parameters can be e
 \subsubsection{Challenges of Symbolic Execution}
 \label{example-discussion}
 
-The example shown in Section~\ref{symbolic-execution-example} represents a case where symbolic execution can derive {\em all} the inputs that make the {\texttt assert} fail, by exploring all the possible execution states. With regards to the underpinning theory, exhaustive symbolic execution represents a {\em sound} and {\em complete} methodology for any decidable analysis. Soundness (no false negatives) means that all possible unsafe inputs are guaranteed to be found, while completeness (no false positives) means that  input values deemed unsafe are actually unsafe. Exhaustive symbolic execution cannot be easily scalable beyond small-sized applications. In many practical cases, a trade-off between soundness and performance approach is used.
+The example shown in Section~\ref{symbolic-execution-example} represents a case where symbolic execution can derive {\em all} the inputs that make the {\texttt assert} fail, by exploring all the possible execution states. With regards to the underpinning theory, exhaustive symbolic execution represents a {\em sound} and {\em complete} methodology for any decidable analysis~\cite{Baldoni:2018:SSE:3212709.3182657}. Soundness (no false negatives) means that all possible unsafe inputs are guaranteed to be found, while completeness (no false positives) means that  input values deemed unsafe are actually unsafe. Exhaustive symbolic execution cannot be easily scalable beyond small-sized applications. In many practical cases, a trade-off between soundness and performance approach is used.
 
 Symbolic execution applied to real world applications faces many challenges, deriving from the increased complexity of those applications compared to the simplicity of our example. These challenges are pointed out by the following questions and observations:
 
@@ -848,8 +851,8 @@ Symbolic execution applied to real world applications faces many challenges, der
 	\item {\em Interactions across the software stack}: how are they handled by the engine? System code/library calls can have side effects, e.g. file creations, calls back to user code or callback functions that could affect the execution at a later stage of the computation and must be taken in account. 
 	Evaluating all possible interaction outcomes may be unfeasible.
 	\item {\em State space explosion}: how does symbolic execution deal with path explosion? The presence of iterative constructs in the language (iteration loops) can dramatically increase the number of execution states, up to the point where it becomes unfeasible for a symbolic execution engine to exhaustively explore all the possible states within a reasonable amount of time. 
-	\item {\em Constraint solving}: what can a constraint solver do in practice?
-	SMT solvers can scale to complex combinations of constraints over hundreds of variables. However, constructs such as non-linear arithmetic pose a major obstacle to efficiency.
+	\item {\em Constraint solving}: in practice, what can a constraint solver do?
+	SMT solvers can solve up to complex combinations of constraints over hundreds of variables. However, constructs such as non-linear arithmetic pose a major obstacle to efficiency.
 	\item {\em Binary code}: what issues can arise when symbolically executing binary code?
 	While our example of Section~\ref{symbolic-execution-example} is written in C, in many cases programs are only available as binary code. The availability of the source code of an application usually simplifies symbolic execution, as it can exploit high-level properties (e.g., object morphology) that can be inferred statically by analyzing the source code.
 \end{itemize}
@@ -860,16 +863,16 @@ Symbolic execution applied to real world applications faces many challenges, der
 \subsection{Symbolic Execution Engines}
 \label{se:executors}
 
-In this section we describe some important ementation. Moving from the concepts of concrete and symbolic runs, we also introduce the idea ofprinciples for the design of symbolic executors and crucial tradeoffs that arise in their impl {\em concolic} execution.
+This section presents some principles for the design of symbolic executors and introduces the concept of {\em concolic} execution.
 
-\subsubsection{Mixing Symbolic and Concrete Execution}
+\paragraph{Mixing Symbolic and Concrete Execution}
 \label{ss:concrete-concolic-symbolic}
 
 \begin{figure}[t]
 	\centering
 	%\vspace{-0.75mm}
 	\includegraphics[width=0.32\columnwidth]{images/concrete-abstract.eps} 
-	\caption{Concrete and abstract execution machine models.}
+	\caption{Concrete and abstract execution machine models. Image courtesy of Association for Computing Machinery~\cite{Baldoni:2018:SSE:3212709.3182657}.}
 	\label{fig:concrete-symbolic}
 	\vspace{-1.5mm}
 \end{figure}
@@ -884,33 +887,44 @@ One way to overcome this issue in practice is to mix concrete and symbolic execu
 \newcommand{\dse}{DSE}
 \paragraph{Dynamic Symbolic Execution} A common approach to concolic execution, known as {\em dynamic symbolic execution} (\dse) or {\em dynamic test  generation}~\cite{DART-PLDI05}, is to have concrete execution drive the symbolic one. A concrete store $\sigma_c$ is maintained, in addition to the symbolic and the path constraints stores, by the execution engine. It chooses an initial arbitrary input and executes the program both concretely and symbolically, by simultaneously updating the two stores and the path constraints. The symbolic execution wlaks through the same branch taken by the concrete execution, and the constraints extracted from the branch condition are added to the current set of path constraints. The symbolic engine does not need to invoke the constraint solver to decide if a branch condition is satisfiable, as this is already tested by the concrete execution. Since not all the paths might be explored by concrete execution, the path conditions associated to a branch can be negated and passed to the SMT solver to determine a satisfying assignment for the new constraints, i.e., to generate a new input. This strategy can be repeated until the desired path coverage is reached.
 
-\vspace{-2pt} 
-%\boxedexample{
-\fbox{
-\begin{minipage}{4.3 in}
-	Consider the C function in Figure~\ref{fig:example-1} and suppose to choose $a = 1$ and $b = 1$ as input parameters. Under these conditions, the concrete execution takes path $A\leadsto B\leadsto C\leadsto E\leadsto G$ in the symbolic tree of Figure~\ref{fig:example-symbolic-execution}. Besides the symbolic stores shown in Figure~\ref{fig:example-symbolic-execution}, the concrete stores maintained in the traversed states are the following:
-	\begin{enumerate}
-		
-		\item[]$-$~~$\sigma_c=\{a\mapsto 1,~b\mapsto 1\}$ in state $A$;
-		\item[]$-$~~$\sigma_c=\{a\mapsto 1,~b\mapsto 1,~x\mapsto 1,~y\mapsto 0\}$ in states $B$ and $C$;
-		\item[]$-$~~$\sigma_c=\{a\mapsto 1,~b\mapsto 1,~x\mapsto 1,~y\mapsto 4\}$ in states $E$ and $G$.
-		
-	\end{enumerate}  
+%\vspace{-2pt} 
+%%\boxedexample{
+%\fbox{
+%\begin{minipage}{4.3 in}
+%	Consider the C function in Figure~\ref{fig:example-1} and suppose to choose $a = 1$ and $b = 1$ as input parameters. Under these conditions, the concrete execution takes path $A\leadsto B\leadsto C\leadsto E\leadsto G$ in the symbolic tree of Figure~\ref{fig:example-symbolic-execution}. Besides the symbolic stores shown in Figure~\ref{fig:example-symbolic-execution}, the concrete stores maintained in the traversed states are the following:
+%	\begin{enumerate}
+%		\item[]$-$~~$\sigma_c=\{a\mapsto 1,~b\mapsto 1\}$ in state $A$;
+%		\item[]$-$~~$\sigma_c=\{a\mapsto 1,~b\mapsto 1,~x\mapsto 1,~y\mapsto 0\}$ in states $B$ and $C$;
+%		\item[]$-$~~$\sigma_c=\{a\mapsto 1,~b\mapsto 1,~x\mapsto 1,~y\mapsto 4\}$ in states $E$ and $G$.
+%	\end{enumerate}  
 	%Stores and path constraints maintained by the concolic run are shown in Figure~\ref{fig:example-concolic-execution}. 
-	After checking that the \texttt{assert} conditions at line 8 succeed, we can generate a new control flow path by negating the last path constraint, i.e., $\alpha_b\neq 0$. The solver at this point would generate a new input that satisfies the constraints $\alpha_a\neq 0\,\wedge\, \alpha_b=0$ (for instance $a = 1$ and $b = 0$) and the execution would continue in a similar way along the path $A\leadsto B\leadsto C\leadsto E\leadsto F$. %
-\end{minipage}}
+%	After checking that the \texttt{assert} conditions at line 8 succeed, we can generate a new control flow path by negating the last path constraint, i.e., $\alpha_b\neq 0$. The solver at this point would generate a new input that satisfies the constraints $\alpha_a\neq 0\,\wedge\, \alpha_b=0$ (for instance $a = 1$ and $b = 0$) and the execution would continue in a similar way along the path $A\leadsto B\leadsto C\leadsto E\leadsto F$. %
+%\end{minipage}}
+\vspace{+10pt} 
+\textbf{Example} (extracted from~\cite{Baldoni:2018:SSE:3212709.3182657} by R.Baldoni et al.). Consider the C function in Figure~\ref{fig:example-1} and suppose to choose $a = 1$ and $b = 1$ as input parameters. Under these conditions, the concrete execution takes path $A\leadsto B\leadsto C\leadsto E\leadsto G$ in the symbolic tree of Figure~\ref{fig:example-symbolic-execution}. Besides the symbolic stores shown in Figure~\ref{fig:example-symbolic-execution}, the concrete stores maintained in the traversed states are the following:
+\begin{enumerate}
+	
+	\item[]$-$~~$\sigma_c=\{a\mapsto 1,~b\mapsto 1\}$ in state $A$;
+	\item[]$-$~~$\sigma_c=\{a\mapsto 1,~b\mapsto 1,~x\mapsto 1,~y\mapsto 0\}$ in states $B$ and $C$;
+	\item[]$-$~~$\sigma_c=\{a\mapsto 1,~b\mapsto 1,~x\mapsto 1,~y\mapsto 4\}$ in states $E$ and $G$.
+	
+\end{enumerate}  
+%Stores and path constraints maintained by the concolic run are shown in Figure~\ref{fig:example-concolic-execution}. 
+After checking that the \texttt{assert} conditions at line 8 succeed, we can generate a new control flow path by negating the last path constraint, i.e., $\alpha_b\neq 0$. The solver at this point would generate a new input that satisfies the constraints $\alpha_a\neq 0\,\wedge\, \alpha_b=0$ (for instance $a = 1$ and $b = 0$) and the execution would continue in a similar way along the path $A\leadsto B\leadsto C\leadsto E\leadsto F$. %
+
 
 \vspace{+10pt}
-Although \dse\ uses concrete inputs to drive the symbolic execution toward a specific path, it still needs to pick a branch to negate whenever a new path has to be explored. Notice also that each concrete execution may add new branches that will have to be visited. Since the set of non-taken branches across all performed concrete executions can be very large, adopting effective search heuristics (Section~\ref{ss:heuristics}) can play a crucial role. For instance, {\textsc DART}~\cite{DART-PLDI05} chooses the next branch to negate using a depth-first strategy. Additional strategies for picking the next branch to negate have been presented in literature. For instance, the {\em generational search} of {\textsc SAGE}~\cite{SAGE-NDSS08} systematically yet partially explores the state space, maximizing the number of new tests generated while also avoiding redundancies in the search. This is achieved by negating constraints following a specific order and by limiting the backtracking of the search algorithm. Since the state space is only partially explored, the initial input plays a crucial role in the effectiveness of the overall approach.  The importance of the first input is similar to what happens in traditional {\em black-box fuzzing}; hence, symbolic engines such as {\textsc SAGE} are often referred to as {\em white-box fuzzers}.
+\dse\ uses concrete inputs to drive the symbolic execution toward a specific path, but needs to select a branch to negate whenever a new path has to be explored. Also, each concrete execution may add new branches that will have to be visited. Since the set of unexplored branches across all performed concrete executions can be very large, it's fundamental to adopt effective search heuristics. For example, {\textsc DART}~\cite{DART-PLDI05} chooses the next branch to negate using a depth-first strategy. 
+Additional strategies for picking the next branch to negate have been presented in literature, like the {\em generational search} of {\textsc SAGE}~\cite{SAGE-NDSS08} that systematically yet partially explores the state space, maximizing the number of new tests generated while also avoiding redundancies in the search. This is achieved by negating constraints following a specific order and by limiting the backtracking of the search algorithm. Since the state space is only partially explored, the initial input plays a crucial role in the effectiveness of the overall approach.  The importance of the first input is similar to what happens in traditional {\em black-box fuzzing}; hence, symbolic engines such as {\textsc SAGE} are often referred to as {\em white-box fuzzers}.
 
 The symbolic information maintained during a concrete run can be exploited by the engine to obtain new inputs and explore new paths. The next example shows how DSE can handle invocations to external code that is not symbolically tracked by the concolic engine.
 
-
-
-\vspace{10pt}
+%\vspace{10pt}
+\vspace{+10pt} 
+\textbf{Example} (extracted from~\cite{Baldoni:2018:SSE:3212709.3182657} by R.Baldoni et al.).
 %\boxedexample{
-\fbox{
-	\begin{minipage}{4.3 in}
+%\fbox{
+%	\begin{minipage}{4.3 in}
 	Consider function {\texttt foo} in Figure~\ref{fig:example-concolic-problems}a and suppose that {\texttt bar} is not symbolically tracked by the concolic engine (e.g., it could be provided by a third-party component, written in a different language, or analyzed following a black-box approach). Assuming that $x = 1$ and $y = 2$ are randomly chosen as the initial input parameters, the concolic engine executes {\texttt bar} (which returns $a = 0$) and skips the branch that would trigger the error statement. At the same time, the symbolic execution tracks the path constraint $\alpha_y \geq 0$ inside function {\texttt foo}. Notice that branch conditions in function {\texttt bar} are not known to the engine. To explore the alternative path, the engine negates the path constraint of the branch in {\texttt foo}, generating inputs, such as $x = 1$ and $y = -4$, that actually drive the concrete execution to the alternative path. With this approach, the engine can explore both paths in {\texttt foo} even if {\texttt bar} is not symbolically tracked. 
 	
 	A variant of the previous code is shown in Figure~\ref{fig:example-concolic-problems}b, where function {\texttt qux} -- differently from {\texttt foo} -- takes a single input parameter but checks the result of {\texttt bar} in the branch condition. Although the engine can track the path constraint in the branch condition tested inside {\texttt qux}, there is no guarantee that an input able to drive the execution toward the alternative path is generated: the relationship between $a$ and $x$ is not known to the concolic engine, as {\texttt bar} is not symbolically tracked. In this case, the engine could re-run the code using a different random input, but in the end it could fail to explore one interesting path in {\texttt qux}. 
@@ -918,7 +932,7 @@ The symbolic information maintained during a concrete run can be exploited by th
 	A related issue is presented by Figure~\ref{fig:example-concolic-problems}c. We observe a {\em path divergence} when inputs generated for a predicted path lead execution to a different path. In general, this can be due to symbol propagation not being tracked, resulting in inaccurate path constraints, or to imprecision in modeling certain (e.g., bitwise, floating-point) operations in the engine. In the example, function {\texttt baz} invokes the external function {\texttt abs}, which performs a side effect on $x$ by assigning it with its absolute value. Choosing $x = 1$ as the initial concrete value, the concrete execution does not trigger the error statement, but the concolic engine tracks the path constraint $\alpha_x \geq 0$ due to the branch in {\texttt baz}, trying to generate a new input by negating it. However the new input, e.g., $x = -1$, does not trigger the error statement due to the (untracked) side effects of {\texttt abs}. Interestingly, the engine has no way of detecting that no input can actually trigger the error.
 	% {\texttt abs}, which simply computes the absolute value of a number
 	%In this case, after generating a new input the engine detects a {\em path divergence}: a concrete execution that does not follow the predicted path. Interestingly, in this example no input could actually trigger the error, but the engine is not able to detect this property.
-\end{minipage}}
+%\end{minipage}}
 
 \begin{figure*}[t]
 	\vspace{-2.5mm}
@@ -976,8 +990,9 @@ if (x < 0) ERROR;
 	a)		     b)			c)
 \end{Verbatim}
 	\vspace{+2pt}
-	\caption{Concolic execution: (a) testing of function {\texttt foo} even when {\texttt bar} cannot be symbolically tracked by an engine, (b) example of false negative, and (c) example of a path divergence, where \texttt{abs} drops the sign of the integer at \texttt{\&x}.
+	\caption{Concolic execution: (a) testing of function {\texttt foo} even when {\texttt bar} cannot be symbolically tracked by an engine, (b) example of false negative, and (c) example of a path divergence, where \texttt{abs} drops the sign of the integer at \texttt{\&x}. 
 		%(b) Example of a missed path: assuming that function {\tt bar} is not symbolically tracked, then it is unlikely that the engine will be able to generate an input that trigger execution of function {\tt error} inside function {\tt qux}. (c) Example of a path divergence: assuming that function {\tt abs} is not tracked, then the concolic engine may try to generate fruitlessly an input able to trigger execution of function {\tt error} in function {\tt baz}.
+		Image courtesy of Association for Computing Machinery~\cite{Baldoni:2018:SSE:3212709.3182657}.
 	}
 	\label{fig:example-concolic-problems}
 	\vspace{-3mm}
@@ -986,10 +1001,10 @@ if (x < 0) ERROR;
 
 
 
-As shown by the example, false negatives (i.e., missed paths) and path divergences are notable downsides of dynamic symbolic execution. \dse\ trades soundness for performance and implementation effort: false negatives are possible, because some program executions -- and therefore possible erroneous behaviors -- may be missed, leading to a {\em complete}, but {\em under-approximate} form of program analysis. Path divergences have been frequently observed in literature: for instance,~\cite{SAGE-NDSS08} reports rates over $60\%$. \cite{CLH-SCN15} presents an empirical study of path divergences, analyzing the main patterns that contribute to this phenomenon. External calls, exceptions, type casts, and symbolic pointers are pinpointed as critical aspects of concolic execution that must be carefully handled by an engine to reduce the number of path divergences.
+ Two notable downsides of dynamic symbolic execution are false negatives (i.e., missed paths) and path divergences as depicted by the example. \dse\ trades soundness for performance and implementation effort: false negatives can happen, because some program executions -- and therefore possible erroneous behaviors -- may be missed, leading to a {\em complete}, but {\em under-approximate} form of program analysis~\cite{Baldoni:2018:SSE:3212709.3182657}. %Path divergences have been frequently observed in literature: for instance,~\cite{SAGE-NDSS08} reports rates over $60\%$. \cite{CLH-SCN15} presents an empirical study of path divergences, analyzing the main patterns that contribute to this phenomenon. External calls, exceptions, type casts, and symbolic pointers are pinpointed as critical aspects of concolic execution that must be carefully handled by an engine to reduce the number of path divergences.
 
 \paragraph{Selective Symbolic Execution}
-{\textsc \stwoe}~\cite{CKC-TOCS12} takes a different approach to mix symbolic and concrete execution based on the observation that one might want to explore only some components of a software stack in full, not caring about others. {\em Selective symbolic execution} carefully interleaves concrete and symbolic execution, while keeping the overall exploration meaningful.
+{\textsc \stwoe}~\cite{CKC-TOCS12} takes a different approach by mixing symbolic and concrete execution considering a partial exploration (i.e. limited to some of the components) of a software stack, dropping the others. {\em Selective symbolic execution} accurately interleaves concrete and symbolic execution, while maintaining the meaningfulness of the overall exploration .
 %{\em Selective symbolic execution} carefully interleaves concrete executions of functions with fully symbolic phases, while keeping the exploration meaningful.
 
 Suppose a function A calls a function B and the execution mode changes at the call site. Two scenarios arise:
@@ -1009,15 +1024,15 @@ We remark that path selection heuristics are often tailored to help the symbolic
 Another popular strategy is {\em random path selection}, that has been refined in several variants. For instance, {\textsc KLEE}~\cite{KLEE-OSDI08} assigns probabilities to paths based on their length and on the branch arity: it favors paths that have been explored fewer times, preventing starvation caused by loops and other path explosion factors.
 
 % have instead presented
-Several works, such as {\textsc EXE}~\cite{EXE-CCS06}, {\textsc KLEE}~\cite{KLEE-OSDI08}, {\textsc Mayhem}~\cite{MAYHEM-SP12}, and {\textsc \stwoe}~\cite{CKC-TOCS12}, have discussed heuristics aimed at maximizing code coverage. For instance, the {\em coverage optimize search} discussed in {\textsc KLEE}~\cite{KLEE-OSDI08} computes for each state a weight, which is later used to randomly select states. The weight is obtained by considering how far the nearest uncovered instruction is, whether new code was recently covered by the state, and the state's call stack. Of a similar flavor is the heuristic proposed in~\cite{LZL-OOPSLA13}, called {\em subpath-guided search}, which attempts to explore {\textit less traveled} parts of a program by selecting the subpath of the control flow graph that has been explored fewer times. This is achieved by maintaining a frequency distribution of explored subpaths, where a subpath is defined as a consecutive subsequence of length $n$ from a complete path. Interestingly, the value $n$ plays a crucial role with respect to the code coverage achieved by a symbolic engine using this heuristic and no specific value has been shown to be universally optimal. %
+%Several works, such as {\textsc EXE}~\cite{EXE-CCS06}, {\textsc KLEE}~\cite{KLEE-OSDI08}, {\textsc Mayhem}~\cite{MAYHEM-SP12}, and {\textsc \stwoe}~\cite{CKC-TOCS12}, have discussed heuristics aimed at maximizing code coverage. For instance, the {\em coverage optimize search} discussed in {\textsc KLEE}~\cite{KLEE-OSDI08} computes for each state a weight, which is later used to randomly select states. The weight is obtained by considering how far the nearest uncovered instruction is, whether new code was recently covered by the state, and the state's call stack. Of a similar flavor is the heuristic proposed in~\cite{LZL-OOPSLA13}, called {\em subpath-guided search}, which attempts to explore {\textit less traveled} parts of a program by selecting the subpath of the control flow graph that has been explored fewer times. This is achieved by maintaining a frequency distribution of explored subpaths, where a subpath is defined as a consecutive subsequence of length $n$ from a complete path. Interestingly, the value $n$ plays a crucial role with respect to the code coverage achieved by a symbolic engine using this heuristic and no specific value has been shown to be universally optimal. %
 %Another interesting search strategy is the {\em shortest-distance symbolic execution} heuristic presented in~\cite{MPF-SAS11}. The work does not target coverage, but aims at identifying program inputs that trigger the execution of a specific point in a program. However, similarly to coverage-based strategies, it is based on a metric for evaluating the shortest distance to the target point. This is computed as the length of the shortest path in the inter-procedural control-flow graph, and paths with the shortest distance are prioritized by the engine. 
-{\em Shortest-distance symbolic execution}~\cite{MPF-SAS11} does not target coverage, but aims at identifying program inputs that trigger the execution of a specific point in a program. The heuristic is based however, as in coverage-based strategies, on a metric for evaluating the shortest distance to the target point. This is computed as the length of the shortest path in the inter-procedural control flow graph, and paths with the shortest distance are prioritized by the engine. 
+%{\em Shortest-distance symbolic execution}~\cite{MPF-SAS11} does not target coverage, but aims at identifying program inputs that trigger the execution of a specific point in a program. The heuristic is based however, as in coverage-based strategies, on a metric for evaluating the shortest distance to the target point. This is computed as the length of the shortest path in the inter-procedural control flow graph, and paths with the shortest distance are prioritized by the engine. 
 
 %Other search heuristics try to prioritize paths likely leading to states that are {\em interesting} according to some goal. For instance, the {\em buggy-path first} strategy in {\textsc AEG}~\cite{AEG-NDSS11} picks paths whose past states have contained small but unexploitable bugs. The intuition is that if a path contains some small errors, it is likely that it has not been properly tested. There is thus a good chance that future states may contain interesting, and hopefully exploitable, bugs. Similarly, the {\em loop exhaustion} strategy discussed in {\textsc AEG}~\cite{AEG-NDSS11} explores paths that visit loops. This approach is inspired by the practical observation that common programming mistakes in loops may lead to buffer overflows or other memory-related errors. In order to find exploitable bugs, {\textsc Mayhem}~\cite{MAYHEM-SP12} instead gives priority to paths where symbolic memory accesses are identified or symbolic instruction pointers are detected. 
 
-Other search heuristics try to prioritize paths likely leading to states that are {\em interesting} according to some goal. For instance, {\textsc AEG}~\cite{AEG-NDSS11} introduces two such strategies. The {\em buggy-path first} strategy picks paths whose past states have contained small but unexploitable bugs. The intuition is that if a path contains some small errors, it is likely that it has not been properly tested. There is thus a good chance that future states may contain interesting, and hopefully exploitable, bugs. Similarly, the {\em loop exhaustion} strategy explores paths that visit loops. This approach is inspired by the practical observation that common programming mistakes in loops may lead to buffer overflows or other memory-related errors. In order to find exploitable bugs, {\textsc Mayhem}~\cite{MAYHEM-SP12} instead gives priority to paths where memory accesses to symbolic addresses are identified or symbolic instruction pointers are detected. 
+%Other search heuristics try to prioritize paths likely leading to states that are {\em interesting} according to some goal. For instance, {\textsc AEG}~\cite{AEG-NDSS11} introduces two such strategies. The {\em buggy-path first} strategy picks paths whose past states have contained small but unexploitable bugs. The intuition is that if a path contains some small errors, it is likely that it has not been properly tested. There is thus a good chance that future states may contain interesting, and hopefully exploitable, bugs. Similarly, the {\em loop exhaustion} strategy explores paths that visit loops. This approach is inspired by the practical observation that common programming mistakes in loops may lead to buffer overflows or other memory-related errors. In order to find exploitable bugs, {\textsc Mayhem}~\cite{MAYHEM-SP12} instead gives priority to paths where memory accesses to symbolic addresses are identified or symbolic instruction pointers are detected. 
 
-\cite{ZCWDL15} proposes a novel method of dynamic symbolic execution to automatically find a program path satisfying a regular property, i.e., a property (such as file usage or memory safety) that can be represented by a Finite State Machine (FSM). Dynamic symbolic execution is guided by the FSM so that branches of an execution path that are most likely to satisfy the property are explored first. The approach exploits both static and dynamic analysis to compute the priority of a path to be selected for exploration: the states of the FSM that the current execution path has already reached are computed dynamically during the symbolic execution, while backward data-flow analysis is used to compute the future states statically. If the intersection of these two sets is non-empty, there is likely a path satisfying the property.
+%\cite{ZCWDL15} proposes a novel method of dynamic symbolic execution to automatically find a program path satisfying a regular property, i.e., a property (such as file usage or memory safety) that can be represented by a Finite State Machine (FSM). Dynamic symbolic execution is guided by the FSM so that branches of an execution path that are most likely to satisfy the property are explored first. The approach exploits both static and dynamic analysis to compute the priority of a path to be selected for exploration: the states of the FSM that the current execution path has already reached are computed dynamically during the symbolic execution, while backward data-flow analysis is used to compute the future states statically. If the intersection of these two sets is non-empty, there is likely a path satisfying the property.
 
 {\em Fitness functions} have been largely used in the context of search-based test generation~\cite{M-STVR04}. %\mynote{[D] Check and rephrase 2nd sentence}
 A fitness function measures how close an explored path is to achieve the target test coverage. Several works, e.g.,~\cite{XTD-DSN09,CS-CACM13}, have applied this idea in the context of symbolic execution. As an example,~\cite{XTD-DSN09} introduces {\em fitnex}, a strategy for flipping branches in concolic execution that prioritizes paths likely {\em closer} to take a specific branch.
@@ -1080,24 +1095,24 @@ A crucial requirement for the reversed exploration in SBE, as well as in CCBSE, 
 
 
 %===================================================================================
-\vspace{-2mm}
-\subsection{Design Principles of Symbolic Executors}
-\label{ss:principles}
+%\vspace{-2mm}
+%\subsection{Design Principles of Symbolic Executors}
+%\label{ss:principles}
 
-A number %\mynote{[D] why MAYHEM?}  
-of performance-related design principles that a symbolic execution engine should follow are  summarized in %{\textsc Mayhem}
-\cite{MAYHEM-SP12}. Most notably:
-\begin{enumerate}
-	\item {\em Progress}: the executor should be able to proceed for an arbitrarily long time without exceeding the given resources. Memory consumption can be especially critical, due to the potentially gargantuan number of distinct control flow paths.
-	\item {\em Work repetition}: no execution work should be repeated, avoiding to restart a program several times from its very beginning in order to analyze different paths that might have a  common prefix.
-	\item {\em Analysis reuse}: analysis results from previous runs should be reused as much as possible. In particular, costly invocations to the SMT solver on  previously solved path constraints should be avoided.
-\end{enumerate}
+%A number %\mynote{[D] why MAYHEM?}  
+%of performance-related design principles that a symbolic execution engine should follow are  summarized in %{\textsc Mayhem}
+%\cite{MAYHEM-SP12}. Most notably:
+%\begin{enumerate}
+%	\item {\em Progress}: the executor should be able to proceed for an arbitrarily long time without exceeding the given resources. Memory consumption can be especially critical, due to the potentially gargantuan number of distinct control flow paths.
+%	\item {\em Work repetition}: no execution work should be repeated, avoiding to restart a program several times from its very beginning in order to analyze different paths that might have a  common prefix.
+%	\item {\em Analysis reuse}: analysis results from previous runs should be reused as much as possible. In particular, costly invocations to the SMT solver on  previously solved path constraints should be avoided.
+%\end{enumerate}
 
-\noindent Due to the large size of the execution state space to be analyzed, different symbolic engines have explored different trade-offs between, e.g., running time and memory consumption, or performance and soundness/completeness of the analysis.
+%\noindent Due to the large size of the execution state space to be analyzed, different symbolic engines have explored different trade-offs between, e.g., running time and memory consumption, or performance and soundness/completeness of the analysis.
 
-Symbolic executors that attempt to execute multiple paths simultaneously in a single run -- also called {\em online} -- clone the execution state at each input-dependent branch. Examples are given in {\textsc KLEE}~\cite{KLEE-OSDI08}, {\textsc AEG}~\cite{AEG-NDSS11}, {\textsc \stwoe}~\cite{CKC-TOCS12}. These engines never re-execute previous instructions, thus avoiding work repetition. However, many active states need to be kept in memory and memory consumption can be large, possibly hindering progress. Effective techniques for reducing the memory footprint include {\em copy-on-write}, which tries to share as much as possible between different states~\cite{KLEE-OSDI08}. As another issue, executing multiple paths in parallel requires to ensure isolation between execution states, e.g., keeping different states of the OS by emulating the effects of system calls.
+%Symbolic executors that attempt to execute multiple paths simultaneously in a single run -- also called {\em online} -- clone the execution state at each input-dependent branch. Examples are given in {\textsc KLEE}~\cite{KLEE-OSDI08}, {\textsc AEG}~\cite{AEG-NDSS11}, {\textsc \stwoe}~\cite{CKC-TOCS12}. These engines never re-execute previous instructions, thus avoiding work repetition. However, many active states need to be kept in memory and memory consumption can be large, possibly hindering progress. Effective techniques for reducing the memory footprint include {\em copy-on-write}, which tries to share as much as possible between different states~\cite{KLEE-OSDI08}. As another issue, executing multiple paths in parallel requires to ensure isolation between execution states, e.g., keeping different states of the OS by emulating the effects of system calls.
 
-Reasoning about a single path at a time, as in concolic execution, is the approach taken by so-called {\em offline executors}, such as {\textsc SAGE}~\cite{SAGE-NDSS08}. Running each path independently of the others results in low memory consumption with respect to online executors and in the capability of reusing immediately analysis results from previous runs. On the other side, work can be largely repeated, since each run usually restarts the execution of the program from the very beginning. In a typical implementation of offline executors, runs are concrete and require an input seed: the program is first executed concretely, a trace of instructions is recorded, and the recorded trace is then executed symbolically.
+%Reasoning about a single path at a time, as in concolic execution, is the approach taken by so-called {\em offline executors}, such as {\textsc SAGE}~\cite{SAGE-NDSS08}. Running each path independently of the others results in low memory consumption with respect to online executors and in the capability of reusing immediately analysis results from previous runs. On the other side, work can be largely repeated, since each run usually restarts the execution of the program from the very beginning. In a typical implementation of offline executors, runs are concrete and require an input seed: the program is first executed concretely, a trace of instructions is recorded, and the recorded trace is then executed symbolically.
 %
-{\em Hybrid executors} such as {\textsc Mayhem}~\cite{MAYHEM-SP12} attempt at balancing between speed and memory requirements: they start in online mode and generate checkpoints, rather than forking new executors, when memory usage or the number of concurrently active states reaches a threshold. Checkpoints maintain the symbolic execution state and replay information. When a checkpoint is picked for restoration, online exploration is resumed from a restored concrete state.
+%{\em Hybrid executors} such as {\textsc Mayhem}~\cite{MAYHEM-SP12} attempt at balancing between speed and memory requirements: they start in online mode and generate checkpoints, rather than forking new executors, when memory usage or the number of concurrently active states reaches a threshold. Checkpoints maintain the symbolic execution state and replay information. When a checkpoint is picked for restoration, online exploration is resumed from a restored concrete state.
 %: mixed approach. Start with an online approach, if needed switch to offline mode by doing checkpoints. A checkpoint contains the symbolic execution state and replay information. Concrete execution state is discarded since it can be quickly recovered at runtime by using one input generated by the solver before checkpointing.
