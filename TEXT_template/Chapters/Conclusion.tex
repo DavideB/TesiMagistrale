@@ -1,25 +1,25 @@
 \chapter{Conclusion} \label{chap:conclusion}
-\begin{flushright}{\slshape    
-   Science, my boy, is made up of mistakes, but they are mistakes
-   which it is useful to make, because they lead little by little
-   to the truth}. \\ \medskip --- \citeauthor{verne_journey:1957}
-   \citetitle{verne_journey:1957} \citeyear{verne_journey:1957}
-\end{flushright} 
-\lettrine[lines=4]{\textcolor{purple}{I}}{n} the previous chapters we have presented the work done in order to support multi-DAG, deadline-based \qos constrained multi-\plans Spark applications, i.e. applications whose execution flow cannot be represented with a single \plan, and whose actual execution flow is only known at runtime. 
+%\begin{flushright}{\slshape    
+%   Science, my boy, is made up of mistakes, but they are mistakes
+%   which it is useful to make, because they lead little by little
+%   to the truth}. \\ \medskip --- \citeauthor{verne_journey:1957}
+%   \citetitle{verne_journey:1957} \citeyear{verne_journey:1957}
+%\end{flushright} 
+\lettrine[lines=4]{\textcolor{purple}{I}}{n} the previous chapters we have presented the work done in order to support deadline-based \qos constrained multi-\plan Spark applications, i.e. applications whose execution flow cannot be represented with a single \textit{Parallel Execution Plan} (\plan), and whose actual execution flow is only known at runtime. 
 
 This chapter summarizes the conclusion of our work and the future works to improve the solution by extending the field of applicability and optimizing each  individual components, to obtain a more complete and efficient solution.
 
 \section{Conclusion}\label{sec:conclusion}
 
-In order to overcome the current limitation that requires Spark applications to be represented by a single \plan at runtime, this thesis presented \dSymb, a solution based on a lightweight symbolic execution of the target application to extract the family of \plans that is used to generate a set of profiles of the application, that is used to tune xSpark to adapt its runtime dynamic resource allocation to help meet a user-defined application deadline.
+%In order to overcome the current limitation that requires Spark applications to be represented by a single \plan at runtime, this thesis presented \tool, a solution based on a lightweight symbolic execution of the target application to extract the family of \plans that is used to generate a set of profiles of the application, that is used to tune xSpark to adapt its runtime dynamic resource allocation to help meet a user-defined application deadline.
 
-The contribution provided by this thesis consists of the design and development of \tool, a  solution composed by an original and lightweight application of the principles of symbolic execution to detect the parallel plans of the execution of Spark multi-DAG applications, create the related execution profiles, and by the integration in xSpark of additional features that exploit the knowledge of the execution plans to manage the allocation of resources at runtime to help achieve the goal of maintaining the execution time of the application within a deadline specified by the user.
+The contribution provided by this thesis consists of the design and the development of \tool, a solution composed by an original and lightweight application of the principles of symbolic execution to detect the parallel plans of the execution of Spark multi-\plan applications, create the related execution profiles, and by the integration in xSpark of additional features that exploit the knowledge of the execution plans to manage the allocation of resources at runtime to help achieve the goal of maintaining the execution time of the application within a deadline specified by the user.
 
-The evaluation results show that \tool meets all the expectations identified by the research questions formulated in \MyChap{chap:ProblemAndSolution}, as it misses fewer deadlines and allocate resources more efficiently than \cSpark. 
+The evaluation results show that \tool meets all the expectations identified by the research questions formulated in \MySec{sec:solution_contribution}, as it misses fewer deadlines and allocate resources more efficiently than \cSpark. 
 
 \section{Future Work}\label{sec:future_work}
 As the applicability of the profiling contained in \tool is currently subject to the limitation related to the number of paths to be profiled, that requires the profiling of the entire application by a specific launcher for each path identified by \dSymb, and can become practically unfeasible if the number of paths is too high, a desirable future work could be directed at improving this part of the tool chain. This future work would be focused to moving away from the current profiling phase which uses path-based selection criteria in favour of a profiling  that uses branch-based criteria. 
  
-Another future work could consist in the research and development along the lines of the applicability of the proposed solution to execute non-strict deadlines QoS=constrained multi-DAG applications.
+Another future work could consist in the research along the lines of the applicability of the proposed solution to execute non-strict deadlines QoS-constrained multi-\plan applications.
 
 

@@ -1,12 +1,12 @@
 \chapter{Evaluation} \label{chap:Evaluation}
-\begin{flushright}{\slshape    
-   Science, my boy, is made up of mistakes, but they are mistakes
-   which it is useful to make, because they lead little by little
-   to the truth}. \\ \medskip --- \citeauthor{verne_journey:1957}
-   \citetitle{verne_journey:1957} \citeyear{verne_journey:1957}
-\end{flushright} 
+%\begin{flushright}{\slshape    
+%   Science, my boy, is made up of mistakes, but they are mistakes
+%   which it is useful to make, because they lead little by little
+%   to the truth}. \\ \medskip --- \citeauthor{verne_journey:1957}
+%   \citetitle{verne_journey:1957} \citeyear{verne_journey:1957}
+%\end{flushright} 
 
-\lettrine[lines=4]{\textcolor{purple}{I}}{n} this chapter we describe the experiments we have performed to evaluate the feasibility and quality of the solution and to address the research questions identified in \MySec{sec:problem_statement}.
+\lettrine[lines=4]{\textcolor{purple}{I}}{n} this chapter we describe the experiments we have performed to evaluate the feasibility and quality of the solution and to address the research questions identified in \MySec{sec:solution_contribution}.
 The evaluation took place through the integration of \dSymb with \cSpark to control the parallel execution of the Spark applications.
 
 \section{Test Environment}\label{sec:test_env}
@@ -41,7 +41,7 @@ The experiments were performed on each of the applications subjected to the test
 \begin{enumerate}[$1 $]
 	\item Execution of \dSymb to obtain the path conditions and generate the launchers corresponding to each identified path.
 	\item Profiling the application subject to the test with the launchers generated and obtaining the plans for each path.
-	\item Use of tool to control the execution of the application by feeding it with input data sets larger than one order of magnitude compared to those used to generate the launchers.
+	\item Use of tool to control the execution of the application by feeding it with input data sets larger by one order of magnitude compared to those used to generate the launchers.
 \end{enumerate}
 We have generated at least one large data set for each profiled path. We also set a reasonable deadline, that is $ 20\% $ longer than the minimum deadline, measured by running the application on Spark configured to use all the resources available on the clusters, and with the same data sets used in the experiments .
 
@@ -54,7 +54,7 @@ Results produced by\tool for PromoCalls and Louvain tools, up to the profiling p
 
 Column $Found?$ shows whether or not \dSymb succeeded in generating a test case (and thus a corresponding profiling launcher) for the identified paths: it was successful in generating test cases for all path of PromoCalls, instead it was able to identify 6 out of 8 possible paths of Louvain\footnote{The two paths of Louvain for which \dSymb was not successful in identifying a corresponding test case were manually inspected. In any case, the proof that either these paths are infeasible, or an input datasets can be identified that exercise these paths, is missing.}. As a matter of fact, we currently have no clue if Louvain can execute these program paths or not.)
 
-Column $J$ (i.e., $Jobs$) and column $Stages$ report  the number of jobs and stages collected when profiling the launchers with \cSpark, which range between 3 and 9 jobs, 3 and 9 stages for Promocalls, and 11 and 17 jobs, 73 and 364 stages for Louvain, respectively. These data are not available for the two paths of Louvain for which \dSymb did not generate a launcher.
+Column $Jobs$ and column $Stages$ report  the number of jobs and stages collected when profiling the launchers with \cSpark, which range between 3 and 9 jobs, 3 and 9 stages for Promocalls, and 11 and 17 jobs, 73 and 364 stages for Louvain, respectively. These data are not available for the two paths of Louvain for which \dSymb did not generate a launcher.
 In both tables, we marked with $^\bullet$ and $^\dagger$ the paths that correspond to the best and worst case, respectively, of each application. 
 
 \begin{table}[thbp]
@@ -200,7 +200,7 @@ In both tables, we marked with $^\bullet$ and $^\dagger$ the paths that correspo
 
 The effectiveness of \tool to control the execution of the tested applications, whose inputs were fed with large datasets, is measured by the results of our experiments that are summarized in Tables~\ref{Table:PerfPromo} and ~\ref{Table:Louvain}. These tables also include the results obtained with the original version of \cSpark, tuned on the worst and best case datasets above, and allow us to compare \tool against \cSpark. The meaning of each column of the tables is explained here below.
 
-For each profiled path $P_i$, column $Experiment$ indicates, the data obtained with \tool ($xSpark_s$), and \cSpark configured with the worst-case dataset ($xSpark_w$) and with the best-case dataset ($xSpark_b$), respectively. 
+For each profiled path $P_i$, column $Experiment$ indicates the data obtained with \tool ($xSpark_s$), and \cSpark configured with the worst-case dataset ($xSpark_w$) and with the best-case dataset ($xSpark_b$), respectively. 
 In column $deadline$ we show the set deadline in seconds. 
 In column $exec\_time$ the actual execution time of the application is reported in seconds, as the average of $5$ iterations of the experiments (for a total of $120$ executions of PromoCalls (8 paths $\times$ 5 repetitions $\times$ 3 modes) and $90$ executions of Louvain). 
 In column $Violation$ we show the deadline violations (i.e., $exec_time > deadline$). 
@@ -229,7 +229,7 @@ penalty =
 \end{cases}
 \]
 
-Remarkably in our experiments, \tool never violated the deadline, hence $penalty$ measures the ampunt of resources that either $xSpark_w$ or $xSpark_b$ have used with respect to \tool. E.g. a $penalty$ of 30\% means that \cSpark used 30\% more resources than \tool. Instead, a negative $penalty$ means that \cSpark used less  resources than \tool. Lastly, when the deadline is violated by either $xSpark_w$ or $xSpark_b$, we consider $penalty$ to be infinite~\cite{shin1994real}. 
+Remarkably in our experiments, \tool never violated the deadline, hence $penalty$ measures the amount of resources that either $xSpark_w$ or $xSpark_b$ have used with respect to \tool. E.g. a $penalty$ of 30\% means that \cSpark used 30\% more resources than \tool. Instead, a negative $penalty$ means that \cSpark used less  resources than \tool. Lastly, when the deadline is violated by either $xSpark_w$ or $xSpark_b$, we consider $penalty$ to be infinite~\cite{shin1994real}. 
 
 As evidenced by the data in Tables~\ref{Table:PerfPromo} and ~\ref{Table:Louvain},  $xSpark_b$ violated the deadline in $7$ out of $8$ paths in the experiments with PromoCalls, and 5 out of 6 paths in the experiments with Louvain. This is due to the optimistic, yet wrong, estimations made in the profiling phase. To explain this behaviour, we have to consider that, for Promocalls, $xSpark_b$ computes the local deadlines and the resource allocation  as if the \plan always consisted of $3$ stages. As a consequence, in all the experiments but $P_1$ (which is the actual best-case path) \cSpark under allocates resources, resulting in the execution time eventually exceeding the deadline by as much as $51.9\%$. We measured the highest error displacement, equals to $67.0\%$, with the worst-case path $P_6$ where \cSpark faces the widest gap between the profiling estimations and the actual runtime workload. 
 
@@ -249,13 +249,11 @@ From the results of our experiments we can evince a positive answer to both rese
 
 We came up with a considerable trial effort, which has led us to perform a total of $226$ experiments on two different applications: a paradigmatic example and a real-world application taken from GitHub. We have shown that \dSymb was able to find a test-case for 14 out 16 of the application paths statically identified with symbolic execution, and demostrated how \cSpark could take advantage from the integration with \dSymb. In this section, we highlight the threats that may constrain the validity of our current results~\cite{wohlin2006empirical}:
 
-\textbf{Internal Threats}.  The test cases generated by dsymb have been slightly modified to increase the size of the datasets (without breaking the path conditions) for the execution of the experiments. This was done to ensure that we could test the desired paths and reliably obtain different repetitions of the experiments. However, data sets were not created in a totally random way. For this reason, we have preliminary executed some experiments with completely randomly created data sets and have obtained a similar result to the one presented.
-
-
-To run the experiments  we slightly modified the test cases generated by \dSymb to increase the size of the datasets (without breaking the path conditions). This way, we ensure to test the desired paths and reliably obtain different repetitions of the experiments. However, the datasets were not created completely randomly. For this reason, we conducted some preliminary experiments with datasets created completely randomly and obtained results similar to those presented. A broader set of experiments could be done to address this aspect as a matter for future developments.
+\textbf{Internal Threats}.  The test cases generated by \dSymb have been slightly modified to increase the size of the datasets (without breaking the path conditions) for the execution of the experiments. This was done to ensure that we could test the desired paths and reliably obtain different repetitions of the experiments. However, data sets were not created in a totally random way. For this reason, we have preliminary executed some experiments with completely randomly created data sets and have obtained a similar result to the one presented.
+A broader set of experiments could be done to address this aspect as a matter for future developments.
 
 \textbf{External Threats}. A limit to the generality of the experiments and of the solutions tested may derive from the assumption underlying the choice of the Spark applications that we have considered. We have chosen two applications: one that uses Spark's core transformations and one that uses the \textit{GraphX} entry for graph analysis. To increase the degree of generality of evaluations, an extension of the number and variety of Spark applications is desirable, taking into consideration different types, such as those that exploit machine learning solutions and use SQL.
 
-Profiling as it is currently done constitutes an additional limitation of the approach used. In fact, a profiling session is required for each test case (launcher) found by \dSymb, but this could become a problem when the number of program paths becomes too high. A desirable direction that a future work could be directed at could be the improvement of this part of the tool chain. The improvement could be achieved through the adoption of a branch-based criterion to select profiling executions, replacing the current path-based criterion. The underpinning rationale is that since the execution of all the program branches assures that any possible \plan of the program has been profiled at least once; ; then, after profiling, we can map the profiled \plans on the paths (and then the path conditions) that include the corresponding program branches. This optimization might also mitigate the issues with paths that our test generator fails to exercize, such as the 2 uncovered paths that we experienced in Louvain.
+Profiling as it is currently done constitutes an additional limitation of the approach used. In fact, a profiling session is required for each test case (launcher) found by \dSymb, but this could become a problem when the number of program paths becomes too high. A desirable direction for a future work could be the improvement of this part of the tool chain. The improvement could be achieved through the adoption of a branch-based criterion to select profiling executions, replacing the current path-based criterion. The underpinning rationale is that since the execution of all the program branches assures that any possible \plan of the program has been profiled at least once; ; then, after profiling, we can map the profiled \plans on the paths (and then the path conditions) that include the corresponding program branches. This optimization might also mitigate the issues with paths that our test generator fails to exercize, such as the 2 uncovered paths that we experienced in Louvain.
 
-\textbf{Concept and Conclusion Threats}. The experiments demonstrate the validity of our idea, namely that the knowledge of the different \plans generated by the Spark applications helps to analyze and control their performance and execution time. Furthermore, we show that an approach based simply on knowledge of the worst case may be sufficient to limit the number of deadline violations, but is significantly less efficient than the one we obtain with our solution. The results obtained are statistically robust and they show only a small variance[??mettere riferimento ai dati risportati in appendice??]. 
+\textbf{Concept and Conclusion Threats}. The experiments demonstrate the validity of our idea, namely that the knowledge of the different \plans generated by the Spark applications helps to analyze and control their performance and execution time. Furthermore, we show that an approach based simply on knowledge of the worst case may be sufficient to limit the number of deadline violations, but is significantly less efficient than the one we obtain with our solution. The results obtained are statistically robust and they show only a small variance. 
