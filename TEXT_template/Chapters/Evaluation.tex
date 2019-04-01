@@ -6,8 +6,7 @@
 %   \citetitle{verne_journey:1957} \citeyear{verne_journey:1957}
 %\end{flushright} 
 
-\lettrine[lines=4]{\textcolor{purple}{I}}{n} this chapter we describe the experiments we have performed to evaluate the feasibility and quality of the solution and to address the research questions identified in \MySec{sec:solution_contribution}.
-The evaluation took place through the integration of \dSymb with \cSpark to control the parallel execution of the Spark applications.
+\lettrine[lines=4]{\textcolor{purple}{I}}{n} this chapter we describe the experiments we have performed to evaluate the feasibility and quality of the solution and to address the research questions identified in  \MySec{sec:solution_contribution}. The evaluation took place by using  \tool, which is the integration of \dSymb with \cSpark, to control the parallel execution of the Spark applications.
 
 \section{Test Environment}\label{sec:test_env}
 The test environment was built on Virtual Machines (from here onward VMs) of type   \textit{Standard\_D14\_v2}~\cite{AzureVMsizes}  provided by Microsoft Azure~\cite{AzureVM}, each of them equipped with $5$ CPUs, $112$ GiB of memory, $800$ GiB of local SSD memory and $6000$ Mbps of network bandwidth.
@@ -26,8 +25,8 @@ This type of VM is optimized for memory usage, with a high memory/core ratio. Th
 \end{figure}
 
 \section{Tested Applications}\label{sec:tested_apps}
-We performed the experiments with two applications: PromoCalls and Louvain.
-PromoCalls is an example application that was developed at Politecnico di Milano in the Deib Labs\footnote{\url{https://github.com/seepep/promocalls}}.
+We performed the experiments with two applications: 
+PromoCalls and Louvain. PromoCalls is an example application that was developed at Politecnico di Milano in the Deib Labs\footnote{\url{https://github.com/seepep/promocalls}}.
 It resembles a batch application from a telecommunications company that calculates promotional discounts based on the number of daily domestic and foreign calls (calls longer than a parametric threshold) made by customers. 
 If a customer makes more than  $min_l$ local long calls or more than $min_a$ abroad long calls (or both) in a day, she may receive discounts on the calls made in that day, in the last $m$ months, or in the current month. 
 Only some or all of the discounts may be applied to the customer depending on the possible combinations of the trigger conditions. 
@@ -120,37 +119,37 @@ In both tables, we marked with $^\bullet$ and $^\dagger$ the paths that correspo
 		%\rotatebox{90}{\textbf{Experiment}}   &
 		\rotatebox{90}{\boldmath$deadline\,[s]$}  &  \rotatebox{90}{\boldmath$exec\_time\,[s]$}  & \rotatebox{90}{\boldmath$violation$} &  \rotatebox{90}{\boldmath$error$}    & \rotatebox{90}{\boldmath$core\_alloc\,[\frac{core}{s}]$}  & \rotatebox{90}{\boldmath$penalty$}   \\
 		\midrule
-		$xSpark_s$  & $91.4$   & $90.3$   & $N$   & $1.2\%$   & $41.3$   & $-$  \\
-		$P_0 \,\,xSpark_w$  & $91.4$   & $88.0$   & $N$   & $3.8\%$   & $53.0$   & $28.3\%$  \\
-		$xSpark_b$  & $91.4$   & $143.0$   & $Y$   & $56.4\%$   & $30.6$   & $\infty$  \\
+		$xSpark_s$  & $91.4$   & $90.3$   & $No$   & $1.2\%$   & $41.3$   & $-$  \\
+		$P_0 \,\,xSpark_w$  & $91.4$   & $88.0$   & $No$   & $3.8\%$   & $53.0$   & $28.3\%$  \\
+		$xSpark_b$  & $91.4$   & $143.0$   & $Yes$   & $56.4\%$   & $30.6$   & $\infty$  \\
 		\midrule
-		$xSpark_s$  & $56.4$   & $46.0$   & $N$   & $18.4\%$   & $56.2$   & $-$  \\
-		$P_1 \,\,xSpark_w$  & $56.4$   & $45.3$   & $N$   & $19.6\%$   & $56.5$   & $0.5\%$  \\
-		$xSpark_b$  & $56.4$   & $55.3$   & $N$   & $1.9\%$   & $38.2$   & $\text{-}33.6\%$  \\
+		$xSpark_s$  & $56.4$   & $46.0$   & $No$   & $18.4\%$   & $56.2$   & $-$  \\
+		$P_1 \,\,xSpark_w$  & $56.4$   & $45.3$   & $No$   & $19.6\%$   & $56.5$   & $0.5\%$  \\
+		$xSpark_b$  & $56.4$   & $55.3$   & $No$   & $1.9\%$   & $38.2$   & $\text{-}33.6\%$  \\
 		\midrule
-		$xSpark_s$  & $107.8$   & $106.3$   & $N$   & $1.3\%$   & $39.2$   & $-$  \\
+		$xSpark_s$  & $107.8$   & $106.3$   & $No$   & $1.3\%$   & $39.2$   & $-$  \\
 		$P_2 \,\,xSpark_w$  & $107.8$   & $104.0$   & $N$   & $3.5\%$   & $52.1$   & $32.9\%$  \\
-		$xSpark_b$  & $107.8$   & $175.0$   & $Y$   & $62.4\%$   & $29.0$   & $\infty$  \\
+		$xSpark_b$  & $107.8$   & $175.0$   & $Yes$   & $62.4\%$   & $29.0$   & $\infty$  \\
 		\midrule
-		$xSpark_s$  & $87.5$   & $86.0$   & $N$   & $1.7\%$   & $42.4$   & $-$  \\
-		$P_3 \,\,xSpark_w$  & $87.5$   & $83.0$   & $N$   & $5.1\%$   & $53.5$   & $26.2\%$  \\
-		$xSpark_b$  & $87.5$   & $138.0$   & $Y$   & $57.8\%$   & $30.1$   & $\infty$  \\
+		$xSpark_s$  & $87.5$   & $86.0$   & $No$   & $1.7\%$   & $42.4$   & $-$  \\
+		$P_3 \,\,xSpark_w$  & $87.5$   & $83.0$   & $No$   & $5.1\%$   & $53.5$   & $26.2\%$  \\
+		$xSpark_b$  & $87.5$   & $138.0$   & $Yes$   & $57.8\%$   & $30.1$   & $\infty$  \\
 		\midrule
-		$xSpark_s$  & $147.6$   & $146.0$   & $N$   & $1.1\%$   & $37.0$   & $-$  \\
-		$P_4 \,\,xSpark_w$  & $147.6$   & $130.0$   & $N$   & $11.9\%$   & $51.4$   & $38.9\%$  \\
-		$xSpark_b$  & $147.6$   & $228.0$   & $Y$   & $54.5\%$   & $28.4$   & $\infty$  \\
+		$xSpark_s$  & $147.6$   & $146.0$   & $No$   & $1.1\%$   & $37.0$   & $-$  \\
+		$P_4 \,\,xSpark_w$  & $147.6$   & $130.0$   & $No$   & $11.9\%$   & $51.4$   & $38.9\%$  \\
+		$xSpark_b$  & $147.6$   & $228.0$   & $Yes$   & $54.5\%$   & $28.4$   & $\infty$  \\
 		\midrule
-		$xSpark_s$  & $77.0$   & $75.3$   & $N$   & $2.2\%$   & $41.0$   & $-$  \\
-		$P_5 \,\,xSpark_w$  & $77.0$   & $70.0$   & $N$   & $9.1\%$   & $53.7$   & $30.9\%$  \\
-		$xSpark_b$  & $77.0$   & $122.0$   & $Y$   & $58.4\%$   & $29.7$   & $\infty$  \\
+		$xSpark_s$  & $77.0$   & $75.3$   & $No$   & $2.2\%$   & $41.0$   & $-$  \\
+		$P_5 \,\,xSpark_w$  & $77.0$   & $70.0$   & $No$   & $9.1\%$   & $53.7$   & $30.9\%$  \\
+		$xSpark_b$  & $77.0$   & $122.0$   & $Yes$   & $58.4\%$   & $29.7$   & $\infty$  \\
 		\midrule
-		$xSpark_s$  & $122.2$   & $120.3$   & $N$   & $1.5\%$   & $39.2$   & $-$  \\
-		$P_6 \,\,xSpark_w$  & $122.2$   & $120.7$   & $N$   & $1.2\%$   & $43.6$   & $11.3\%$  \\
-		$xSpark_b$  & $122.2$   & $204.0$   & $Y$   & $67.0\%$   & $27.9$   & $\infty$  \\
+		$xSpark_s$  & $122.2$   & $120.3$   & $No$   & $1.5\%$   & $39.2$   & $-$  \\
+		$P_6 \,\,xSpark_w$  & $122.2$   & $120.7$   & $No$   & $1.2\%$   & $43.6$   & $11.3\%$  \\
+		$xSpark_b$  & $122.2$   & $204.0$   & $Yes$   & $67.0\%$   & $27.9$   & $\infty$  \\
 		\midrule
-		$xSpark_s$  & $112.1$   & $110.7$   & $N$   & $1.3\%$   & $39.2$   & $-$  \\
-		$P_7 \,\,xSpark_w$  & $112.1$   & $100.0$   & $N$   & $10.8\%$   & $53.0$   & $35.2\%$  \\
-		$xSpark_b$  & $112.1$   & $180.0$   & $Y$   & $60.6\%$   & $28.8$   & $\infty$  \\
+		$xSpark_s$  & $112.1$   & $110.7$   & $No$   & $1.3\%$   & $39.2$   & $-$  \\
+		$P_7 \,\,xSpark_w$  & $112.1$   & $100.0$   & $No$   & $10.8\%$   & $53.0$   & $35.2\%$  \\
+		$xSpark_b$  & $112.1$   & $180.0$   & $Yes$   & $60.6\%$   & $28.8$   & $\infty$  \\
 		
 		\bottomrule
 	\end{tabular}
@@ -168,29 +167,29 @@ In both tables, we marked with $^\bullet$ and $^\dagger$ the paths that correspo
 		%\rotatebox{90}{\textbf{Experiment}}   &
 		\rotatebox{90}{\boldmath$deadline\,[s]$}  &  \rotatebox{90}{\boldmath$exec\_time\,[s]$}  & \rotatebox{90}{\boldmath$violation$} &  \rotatebox{90}{\boldmath$error$}    & \rotatebox{90}{\boldmath$core\_alloc\,[\frac{core}{s}]$}  & \rotatebox{90}{\boldmath$penalty$}   \\
 		\midrule
-		$xSpark_s$  & $184.3$   & $180.1$   & $N$   & $2.3\%$   & $35.9$   & $-$  \\
-		$P_0 \,\,xSpark_w$  & $184.3$   & $142.0$   & $N$   & $23.0\%$   & $46.1$   & $28.4\%$  \\
-		$xSpark_b$  & $184.3$   & $222.3$   & $Y$   & $20.6\%$   & $15.2$   & $\infty$  \\
+		$xSpark_s$  & $184.3$   & $180.1$   & $No$   & $2.3\%$   & $35.9$   & $-$  \\
+		$P_0 \,\,xSpark_w$  & $184.3$   & $142.0$   & $No$   & $23.0\%$   & $46.1$   & $28.4\%$  \\
+		$xSpark_b$  & $184.3$   & $222.3$   & $Yes$   & $20.6\%$   & $15.2$   & $\infty$  \\
 		\midrule
-		$xSpark_s$  & $228.0$   & $227.0$   & $N$   & $0.4\%$   & $32.3$   & $-$  \\
-		$P_1 \,\,xSpark_w$  & $228.0$   & $222.0$   & $N$   & $2.6\%$   & $33.2$   & $2.8\%$  \\
-		$xSpark_b$  & $228.0$   & $329.3$   & $Y$   & $44.4\%$   & $7.4$   & $\infty$  \\
+		$xSpark_s$  & $228.0$   & $227.0$   & $No$   & $0.4\%$   & $32.3$   & $-$  \\
+		$P_1 \,\,xSpark_w$  & $228.0$   & $222.0$   & $No$   & $2.6\%$   & $33.2$   & $2.8\%$  \\
+		$xSpark_b$  & $228.0$   & $329.3$   & $Yes$   & $44.4\%$   & $7.4$   & $\infty$  \\
 		\midrule
-		$xSpark_s$  & $292.8$   & $290.7$   & $N$   & $0.7\%$   & $32.3$   & $-$  \\
-		$P_2 \,\,xSpark_w$  & $292.8$   & $289.0$   & $N$   & $1.3\%$   & $32.5$   & $0.5\%$  \\
-		$xSpark_b$  & $292.8$   & $429.0$   & $Y$   & $46.5\%$   & $7.0$   & $\infty$  \\
+		$xSpark_s$  & $292.8$   & $290.7$   & $No$   & $0.7\%$   & $32.3$   & $-$  \\
+		$P_2 \,\,xSpark_w$  & $292.8$   & $289.0$   & $No$   & $1.3\%$   & $32.5$   & $0.5\%$  \\
+		$xSpark_b$  & $292.8$   & $429.0$   & $Yes$   & $46.5\%$   & $7.0$   & $\infty$  \\
 		\midrule
-		$xSpark_s$  & $228.7$   & $226.0$   & $N$   & $1.2\%$   & $35.5$   & $-$  \\
-		$P_3 \,\,xSpark_w$  & $228.7$   & $211.3$   & $N$   & $7.6\%$   & $41.4$   & $16.6\%$  \\
-		$xSpark_b$  & $228.7$   & $292.0$   & $Y$   & $27.7\%$   & $16.0$   & $\infty$  \\
+		$xSpark_s$  & $228.7$   & $226.0$   & $No$   & $1.2\%$   & $35.5$   & $-$  \\
+		$P_3 \,\,xSpark_w$  & $228.7$   & $211.3$   & $No$   & $7.6\%$   & $41.4$   & $16.6\%$  \\
+		$xSpark_b$  & $228.7$   & $292.0$   & $Yes$   & $27.7\%$   & $16.0$   & $\infty$  \\
 		\midrule
-		$xSpark_s$  & $163.0$   & $159.4$   & $N$   & $2.2\%$   & $38.4$   & $-$  \\
-		$P_6 \,\,xSpark_w$  & $163.0$   & $158.0$   & $N$   & $3.0\%$   & $39.8$   & $3.8\%$  \\
-		$xSpark_b$  & $163.0$   & $242.0$   & $Y$   & $48.5\%$   & $8.5$   & $\infty$  \\
+		$xSpark_s$  & $163.0$   & $159.4$   & $No$   & $2.2\%$   & $38.4$   & $-$  \\
+		$P_6 \,\,xSpark_w$  & $163.0$   & $158.0$   & $No$   & $3.0\%$   & $39.8$   & $3.8\%$  \\
+		$xSpark_b$  & $163.0$   & $242.0$   & $Yes$   & $48.5\%$   & $8.5$   & $\infty$  \\
 		\midrule
-		$xSpark_s$  & $156.0$   & $139.0$   & $N$   & $10.9\%$   & $33.2$   & $-$  \\
-		$P_7 \,\,xSpark_w$  & $156.0$   & $131.5$   & $N$   & $15.7\%$   & $43.6$   & $31.4\%$  \\
-		$xSpark_b$  & $156.0$   & $152.7$   & $N$   & $2.1\%$   & $30.9$   & $-7.0\%$  \\
+		$xSpark_s$  & $156.0$   & $139.0$   & $No$   & $10.9\%$   & $33.2$   & $-$  \\
+		$P_7 \,\,xSpark_w$  & $156.0$   & $131.5$   & $No$   & $15.7\%$   & $43.6$   & $31.4\%$  \\
+		$xSpark_b$  & $156.0$   & $152.7$   & $No$   & $2.1\%$   & $30.9$   & $-7.0\%$  \\
 		\bottomrule
 	\end{tabular}
 	\caption{Results for $Louvain$}
@@ -198,12 +197,12 @@ In both tables, we marked with $^\bullet$ and $^\dagger$ the paths that correspo
 	\vspace{-8mm}
 \end{table}
 
-The effectiveness of \tool to control the execution of the tested applications, whose inputs were fed with large datasets, is measured by the results of our experiments that are summarized in Tables~\ref{Table:PerfPromo} and ~\ref{Table:Louvain}. These tables also include the results obtained with the original version of \cSpark, tuned on the worst and best case datasets above, and allow us to compare \tool against \cSpark. The meaning of each column of the tables is explained here below.
+The effectiveness of \tool to control the execution of the tested applications, whose inputs were fed with large datasets, is measured by the results of our experiments that are summarized in Tables~\ref{Table:PerfPromo} and ~\ref{Table:Louvain}. These tables also include the results obtained with the original version of \cSpark, tuned on the worst and best case datasets mentioned above, and allow us to compare \tool against \cSpark. The meaning of each column of the tables is explained here below.
 
 For each profiled path $P_i$, column $Experiment$ indicates the data obtained with \tool ($xSpark_s$), and \cSpark configured with the worst-case dataset ($xSpark_w$) and with the best-case dataset ($xSpark_b$), respectively. 
 In column $deadline$ we show the set deadline in seconds. 
 In column $exec\_time$ the actual execution time of the application is reported in seconds, as the average of $5$ iterations of the experiments (for a total of $120$ executions of PromoCalls (8 paths $\times$ 5 repetitions $\times$ 3 modes) and $90$ executions of Louvain). 
-In column $Violation$ we show the deadline violations (i.e., $exec_time > deadline$). 
+In column $violation$ we show the deadline violations (i.e., $exec_time > deadline$). 
 The error  is quantified in column $error$, defined as:
 %
 \[
@@ -254,6 +253,6 @@ A broader set of experiments could be done to address this aspect as a matter fo
 
 \textbf{External Threats}. A limit to the generality of the experiments and of the solutions tested may derive from the assumption underlying the choice of the Spark applications that we have considered. We have chosen two applications: one that uses Spark's core transformations and one that uses the \textit{GraphX} entry for graph analysis. To increase the degree of generality of evaluations, an extension of the number and variety of Spark applications is desirable, taking into consideration different types, such as those that exploit machine learning solutions and use SQL.
 
-Profiling as it is currently done constitutes an additional limitation of the approach used. In fact, a profiling session is required for each test case (launcher) found by \dSymb, but this could become a problem when the number of program paths becomes too high. A desirable direction for a future work could be the improvement of this part of the tool chain. The improvement could be achieved through the adoption of a branch-based criterion to select profiling executions, replacing the current path-based criterion. The underpinning rationale is that since the execution of all the program branches assures that any possible \plan of the program has been profiled at least once; ; then, after profiling, we can map the profiled \plans on the paths (and then the path conditions) that include the corresponding program branches. This optimization might also mitigate the issues with paths that our test generator fails to exercize, such as the 2 uncovered paths that we experienced in Louvain.
+Profiling as it is currently done constitutes an additional limitation of the approach used. In fact, a profiling session is required for each test case (launcher) found by \dSymb, but this could become a problem when the number of program paths becomes too high. A desirable direction for a future work could be the improvement of this part of the tool chain. The improvement could be achieved through the adoption of a branch-based criterion to select profiling executions, replacing the current path-based criterion. The underpinning rationale is that since the execution of all the program branches assures that any possible \plan of the program has been profiled at least once; then, after profiling, we can map the profiled \plans on the paths (and then the path conditions) that include the corresponding program branches. This optimization might also mitigate the issues with paths that our test generator fails to exercize, such as the 2 uncovered paths that we experienced in Louvain.
 
 \textbf{Concept and Conclusion Threats}. The experiments demonstrate the validity of our idea, namely that the knowledge of the different \plans generated by the Spark applications helps to analyze and control their performance and execution time. Furthermore, we show that an approach based simply on knowledge of the worst case may be sufficient to limit the number of deadline violations, but is significantly less efficient than the one we obtain with our solution. The results obtained are statistically robust and they show only a small variance. 
