@@ -1,12 +1,12 @@
 \chapter{Implementation} \label{chap:implementation}
-\begin{flushright}{\slshape    
-   Science, my boy, is made up of mistakes, but they are mistakes
-   which it is useful to make, because they lead little by little
-   to the truth}. \\ \medskip --- \citeauthor{verne_journey:1957}
-   \citetitle{verne_journey:1957} \citeyear{verne_journey:1957}
-\end{flushright} 
+%\begin{flushright}{\slshape    
+%   Science, my boy, is made up of mistakes, but they are mistakes
+%   which it is useful to make, because they lead little by little
+%   to the truth}. \\ \medskip --- \citeauthor{verne_journey:1957}
+%   \citetitle{verne_journey:1957} \citeyear{verne_journey:1957}
+%\end{flushright} 
 
-\lettrine[lines=4]{\textcolor{purple}{I}}{n} this chapter we show the implementation details of \tool, which consists of the modifications to existing xSpark component, new components added to xSpark, \textit\approach\xspace concrete application \textit {launchers} and the {xSpark-dagsymb} python tool that was used to launch the experiments to generate the data for the evaluation of the solution.
+\lettrine[lines=4]{\textcolor{purple}{I}}{n} this chapter we show the implementation details of \tool, which consists of the modifications to existing xSpark component, new components added to xSpark, \textit\approach\xspace concrete application \textit {launchers} and the \textit{Python tool} embedded in \tool that was used to launch the experiments that generated the results for the evaluation of the solution.
 
 %\begin{itemize}
 %	\item Modifications to existing xSpark components
@@ -47,10 +47,10 @@ xSpark uses a heuristic to compute per-stage deadlines and to estimate how many 
 %where $numExecutors$ is the number of executors and $cq$ is the $core\quantum$, a constant that defines the quantization applied to resource allocation, the smaller this value is, the more precise the allocation.
 
 \subsection{Current xSpark Scheduling Limitation}\label{sec:impl_xspark_sched_limitation}
-At runtime, an annotated DAG allows the xSpark scheduler function to comprehend how much work has already been completed and how much work still needs to be done. This means that xSpark can only optimize the allocation of the resources if the execution of all jobs of the application use the same DAG. This might not always be the case, for example when the code contains branches or loops, because these might need to be resolved in different ways at runtime. This is a severe limitation of the xSpark capability to manage real-world applications.
+At runtime, an annotated DAG or \textit{Parallel Execution Plan}, (\plan from now on) allows the xSpark scheduler function to comprehend how much work has already been completed and how much work still needs to be done. This means that xSpark can only optimize the allocation of the resources if the execution of all jobs of the application use the same \plan. This might not always be the case, for example when the code contains branches or loops, because these might need to be resolved in different ways at runtime. This is a severe limitation of the xSpark capability to manage real-world applications.
 
 \section{Implementation Scope and Objective}\label{sec:impl_scope_objective}
-The current work, by addressing the xSpark limitation explained above, aims at extending the scope of applicability of xSpark enhancing it with the capability to manage the case of applications that can potentially generate, at runtime, a different DAG at each execution. The code in this kind of applications includes conditional branches or iterative loops whose outcomes can only be resolved at runtime because they depend on user input values or results from previous computations that cannot be predicted or folded to constant values by the compiler. 
+The present work, by addressing the xSpark limitation explained above, aims at extending the scope of applicability of xSpark, enhancing it with the capability to manage the case of applications that can potentially generate, at runtime, a different \plan at each execution. The code in this kind of applications includes conditional branches or iterative loops whose outcomes can only be resolved at runtime because they depend on user input values or results from previous computations that cannot be predicted or folded to constant values by the compiler. 
 \subsection{Symbolic Execution}\label{sec:impl_symbolic_execution}
 Executing a program symbolically means to simultaneously explore multiple paths that a program could take under different inputs. The key idea is to allow a program to take on symbolic – rather than concrete – input values. Execution is performed by a symbolic execution engine, which maintains for each explored control flow path: 
 (i)	a first-order Boolean formula that describes the conditions satisfied by the branches taken along that path, and (ii) a symbolic memory store that maps variables to symbolic expressions or values. 
@@ -59,7 +59,7 @@ When a conditional branch is met, both sides of the branch are executed. Branch 
 A symbolic execution tree is generated with an execution state associated with each node, containing the statement to be executed, the symbolic store, and the path conditions (a formula that expresses a set of assumptions on the symbols). The leaves of the tree identify the end of the computations, and tracing back from each leaf up to the root of the tree allows us to reconstruct, in reverse order, all the possible execution paths of the program. Our implementation exploits the funcionality provided by  \textit{GuardEvaluator}, an extension to Spark applications explained in \MySec{sec:guard_evaluator}, which is generated by an external implementation of the ligthweight symbolic execution algorithm  described in \MySec{sec:lightweight_symbolic_execution}.
 
 \subsection{\tool vs. xSpark}
-The first important difference between \tool and xSpark is in the profiling of the applications. xSpark requires the generation of a single DAG profile per application, while \tool requires a family of DAG profiles, one for each possible execution path, each of them associated to a unique set of “Path Conditions”. Profile information is collected in special JSON files, called "JSON profiles". \MyListing{lst:profile_example} shows an example of a JSON profile.
+The first important difference between \tool and xSpark is in the profiling of the applications. xSpark requires the generation of a single \plan profile per application, while \tool requires a family of \plan profiles, one for each possible execution path, each of them associated to a unique set of “Path Conditions”. Profile information is collected in special JSON files, called "JSON profiles". \MyListing{lst:profile_example} shows an example of a JSON profile.
 \lstinputlisting[
 firstline=1,
 lastline=141,
@@ -83,7 +83,7 @@ The profiling information for a \tool application is obtained by combining the J
 	\caption{Structure of profile JumboJSON. Each profile is identified by its profile id's {"$0$", "$1$", ...,"$7$"} and, in general, is characterized by its own number of stages and key values. Left and right images show the same JumboJSON profile where profile "$0$" (left) and profile "$1$" (right) are expanded, to show their difference in terms of number of stages ($6$ stages for profile $0$ and $3$ for profile $1$ ) and totalduration ($76,200$ ms for profile $0$ ms and  $43,000$ ms for profile $1$).}
 	\label{fig:jumboJSON_structure}
 \end{figure}
-Futhermore, each single json profile is enhanced with information about the jobs composing the application, as shown in \MyFig{fig:profile_jobs_info}. 
+Furthermore, each single json profile is enhanced with information about the jobs composing the application, as shown in \MyFig{fig:profile_jobs_info}. 
 \begin{figure}[tbhp]
 	%\vspace*{-1cm}
 	\hspace*{-1.7cm}
@@ -112,8 +112,8 @@ Inside \tool is kept a symbolic memory store that maps symbolic values (or symbo
 		5	& count\_PromoCalls.java:45\_1	& 3800      \\ \hline
 	\end{tabular}
 \end{table}
-\MyTab{Table:impl_symbolic_memory_store_contents} shows an example of symbolic memory store contents during the execution of the application, run with three commandline arguments having value “100”, “200”, “300” and two spark actions already executed, of which the second was executed twice.
-The application is also required to provide a class implementing a method called \texttt{evaluateGuards} that receives in input a Map of a symbolic memory store (as the one described above) and returns a list of the profile id’s whose DAG’s are still executable (i.e. they contain execution paths whose Path Conditions are satisfiable).
+\MyTab{Table:impl_symbolic_memory_store_contents} shows an example of symbolic memory store contents during the execution of the application, run with three commandline arguments having value “100”, “200”, “300” and two Spark actions already executed, of which the second was executed twice.
+The application is also required to realize the \textit{GuardEvaluator} functionality (explained in ~\MySec{sec:guard_evaluator}) by providing a \textit{Java} class implementing a method called \texttt{evaluateGuards} that receives in input a Map of a symbolic memory store (as the one described above) and returns a list of the profile id’s whose \plans are still executable (i.e. they contain execution paths whose Path Conditions are satisfiable).
 
 \subsection{A new Heuristic}\label{sec:new_heuristic}
 \tool implements \texttt{HeuristicSymExControlUnlimited}, a 
@@ -166,7 +166,7 @@ label=lst:SparkSubmit_submit
 As shown in \MyFig{fig:xsparkdagsymb}, for each set of input parameters identified by \dSymb a \textit{Launcher} is generated. A \textit{Launcher} is a Java class which contains the command to run the application with a specific set of arguments, which is in a 1:1 relationship with the application parameters of the corresponding \plan. An example of Launcher class is shown in \MyListing{lst:LauncherExample}. 
 
 A \textit{Profiling} (see \MyFig{fig:xSparkExecFlow}
-) of the application is done by running it with each \textit{Launcher}'s set of arguments. Each profiling run generates the corresponding \plan in a specialized JSON file. At the end of this process, all the generated \plans are packaged into another JSON file, in jargon called \textit{JumboJSON}, to form the \model. All the generated JSON files are then stored along with the \model \textit{Store} on the \textit{Spark Master} server. 
+) of the application is done by running it with each \textit{Launcher}'s set of arguments. Each profiling run generates the corresponding \plan in a specialized JSON file. At the end of this process, all the generated \plans are packaged into another JSON file, in jargon called \textit{JumboJSON}, to form the \model. All the generated JSON files are then stored along with the \model in the \textit{\model{ Store}} on the \textit{Spark Master} server. 
 \lstinputlisting[
 firstline=1,
 lastline=42,
@@ -184,7 +184,7 @@ label=lst:LauncherExample
 
 
 \section{PEP*}\label{sec:getting_peps}
-The previous version of xSpark required a single \plan to be present in the \textit{\plan Store}, so we had to modify the xSpark class \textit{DAGScheduler} to  account for the data in the \textit{JumboJSON file} that now contains all the \plans. To maintain backwards compatibility, a new variable was introduced, \texttt{JumboJson}, to hold the contents of the \model Store. The modified code is in charge of checking the \textit{heuristic type} in the \textit{SparkContext} instance \texttt{sc}, to understand if it should expect the contents of the \model Store to be a single \plan or a whole set of \plans representing a \model. The heuristic type is initialized with the value of the key \textit{spark.control.heuristic} specified in the xSpark configuration file \textit{spark-defaults.conf}. 
+The previous version of xSpark required a single \plan to be present in the \textit{\model  Store}, so we had to modify the xSpark class \textit{DAGScheduler} to take in account that the data in the \textit{JumboJSON file} now contains all the \plans. To maintain backwards compatibility, a new variable was introduced, \texttt{JumboJson}, to hold the contents of the \model Store. The modified code is in charge of checking the \textit{heuristic type} in the \textit{SparkContext} instance \texttt{sc}, to understand if it should expect the contents of the \model Store to be a single \plan or a whole set of \plans representing a \model. The heuristic type is initialized with the value of the key \textit{spark.control.heuristic} specified in the xSpark configuration file \textit{spark-defaults.conf}. 
 
 \lstinputlisting[
 firstline=1,
@@ -304,8 +304,8 @@ captionpos=t,
 label=lst:HeuristicSymExControlUnlimited
 ]{CodeFiles/HeuristicSymExControlUnlimited.scala}
 Class \texttt{HeuristicSymExControlUnlimited} implementation code is shown in \MyListing{lst:HeuristicSymExControlUnlimited}. The \plan selection performed by method \texttt{nextProfile} is made by choosing the \textit{"worst case"} among the valid \plans, that is the \plan with the maximum number of stages still to be executed, as we want to be conservative and minimize the deadline violations. If we wanted to optimize another performance indicator, like minimum  resource utilization in absence of strict deadline commitment, we could choose the profile with an average number of remaining stages to be executed.
-\paragraph{Stage Deadline Adjustment}
-As it was explained in \MySec{sec:heuristic}, when a stage is submitted for execution, the \texttt{heuristic} calculates its stage deadline $deadline(sk)$ based on the   $ApplicationDeadline$, the $SpentTime$, which is the sum of the durations of the stages already executed, and the stage weight $weigth(sk)$. Ou solution implies that we select potentially a new \plan at each new job execution boundary. This means that we have to face a  situation where \texttt{heuristic} calculates the new stage deadline using the value of $SpentTime$ that is calculated from the \plan used to execute the previous stages and the value of $weigth(sk)$ that is calculated from the newly selected \plan. This is incorrect, since the new \plan, in general, has its own number of stages and stage durations. We fixed it by changing the way  $SpentTime$ is calculated by the following changes to the xSpark code: i) \textit{case} class \texttt{SparkStageWeightSubmitted} in class \texttt{SparkListener.scala} shown in \MyListing{lst:SparkListener_SparkStageWeightSubmitted}, where optional formal parameter \texttt{executedstagesduration} is added to the \textit{case} class declaration ii) class method \texttt{submitMissingTasks} of class \texttt{DAGScheduler.scala} shown in \MyListing{lst:DAGScheduler_submitMissingTasks}, where the variable \texttt{executedstagesduration} is initialized with the cumulated duration of the executed stages from the selected \plan and passed as a parameter to the \texttt{SparkStageWeightSubmitted} and iii) method \texttt{onStageWeightSubmitted} in class \texttt{ControlEventListener.scala} shown in \MyListing{lst:ControlEventListener_onStageWeightSubmitted}, where \texttt{stageSubmitted.executedstagesduration} is used to calculate the value of the variable \texttt{totaldurationremaining}. 
+\paragraph{Stage Deadline Adjustment}\label{sec:stage_deadline_adjustment}
+As it was explained in \MySec{sec:heuristic}, when a stage is submitted for execution, the \texttt{heuristic} calculates its stage deadline $deadline(sk)$ based on the   $ApplicationDeadline$, the $SpentTime$, which is the sum of the durations of the stages already executed, and the stage weight $weigth(sk)$. Our solution implies that we select potentially a new \plan at each new job execution boundary. This means that we have to face a situation where \texttt{heuristic} calculates the new stage deadline using the value of $SpentTime$ that is calculated from the \plan used to execute the previous stages and the value of $weigth(sk)$ that is calculated from the newly selected \plan. This is incorrect, since the new \plan, in general, has its own number of stages and stage durations. We fixed it by changing the way  $SpentTime$ is calculated by the following changes to the xSpark code: i) \textit{case} class \texttt{SparkStageWeightSubmitted} in class \texttt{SparkListener.scala} shown in \MyListing{lst:SparkListener_SparkStageWeightSubmitted}, where optional formal parameter \texttt{executedstagesduration} is added to the \textit{case} class declaration ii) class method \texttt{submitMissingTasks} of class \texttt{DAGScheduler.scala} shown in \MyListing{lst:DAGScheduler_submitMissingTasks}, where the variable \texttt{executedstagesduration} is initialized with the cumulated duration of the executed stages from the selected \plan and passed as a parameter to the \texttt{SparkStageWeightSubmitted} and iii) method \texttt{onStageWeightSubmitted} in class \texttt{ControlEventListener.scala} shown in \MyListing{lst:ControlEventListener_onStageWeightSubmitted}, where \texttt{stageSubmitted.executedstagesduration} is used to calculate the value of the variable \texttt{totaldurationremaining}. 
 
 \lstinputlisting[
 firstline=1,
@@ -352,6 +352,22 @@ captionpos=t,
 label=lst:ControlEventListener_onStageWeightSubmitted
 ]{CodeFiles/ControlEventListener_onStageWeightSubmitted.scala}
 
+\paragraph{Stage Cardinality Mismatch Adjustment}
+As it will be presented in \MyChap{chap:Evaluation} dedicated to the evaluation of the solution, we have to be able to run the applications under xSpark configured to use heuristic \texttt{HeuristicControlUnlimited} and providing a single \plan corresponding to the \textbf\textit{best case} (i.e. lowest number of stages) or the \textbf\textit{worst case} (i.e. highest number of stages). These test settings are necessary to compare the performance of xSpark with and without \textit{Symbolic Execution} capabilities, however this situation leads  to the problem that we call \textit{Stage Cardinality Mismatch}. It happens when the number of stages of the application does not match the number of stages in the \plan. We can have two cases: the \plan contains more stages than the application or, vice-versa, the \plan contains less stages than the application. In the former case there are no problems, and  xSpark terminates correctly the execution of the application, while in the latter xSpark tries to  retrieve information from the \plan about a non-existant stage and it terminates the execution of the application in error. To avoid this unwanted situation, we have changed the code in method \texttt{submitMissingTasks} of class \texttt{DAGScheduler.scala} shown in \MyListing{lst:DAGScheduler_submitMissingTasks}, where we added the variable \texttt{highestStageIdInProfile} that is initialized with the cardinality of the stages in the \plan and its value assigned to the variable \texttt{stageId} if the \texttt{id} of the requested stage is higher than \texttt{highestStageIdInProfile}. This creates the effect called \textit{stage id extension} depicted in \MyFig{fig:stage_id_extension}
+\begin{figure}[tbhp]
+	%\hspace*{-4cm}
+	\centering
+	\includegraphics[width=\columnwidth]{images/stage_cardinality_mismatch_ok.pdf}
+	\caption{Stage Cardinality Mismatch - Acceptable situation.}
+	\label{fig:stage_cardinality_mismatch_ok}
+\end{figure}
+\begin{figure}[tbhp]
+	%\hspace*{-4cm}
+	\centering
+	\includegraphics[width=\columnwidth]{images/stage_id_extension.pdf}
+	\caption{Stage Cardinality Mismatch - stage id extension.}
+	\label{fig:stage_id_extension}
+\end{figure}
 
 \section{Symbols}\label{sec:symbols}
 As mentioned in \MySec{sec:symbol_store}, we have to update the Symbol Store everytime a variable associated to a symbol is evaluated by the concrete execution of the application. We adopted the convention to identify a symbol by the string \textit{arg\_n} if it refers to a runtime application argument, where n is the position of the argument (e.g. \textit{arg\_$0$}), or by a string obtained by concatenating its \textit{CallSite} and \textit{IterationNumber} separated by an underscore character \textit{"\_"}, where \textit{Call Site} is a string obtained by concatenating \textit{SparkActionName}, \textit{ApplicationClassName}, \textit{SourceLanguageName:SourceLineNumber} separated by an underscore character \textit{"\_"}, and  \textit{IterationNumber} is an integer starting from $0$ and incremented everytime a call is originated by the same \textit{CallSite}. i.e. the same line of code is re-executed (e.g. due to iterative loops). Examples of formal symbol names are shown in \MyFig{fig:symbol_name}.
@@ -642,7 +658,7 @@ Applications are executed using
 application profile <\emph{appname}>.json to be present in the
 xSpark configuration directory. The name of the application and the experiment
 parameters are inserted into a JSON format ``experiment files'' and passed as commandline
-arguments to the \emph{\textbf{profile\_symex}} command. As an example, an
+arguments to the \emph{\textbf{submit\_symex}} command. As an example, an
 experiment files for CallsExample and one for Louvain are shown here below:
 
 
@@ -701,7 +717,32 @@ Louvain experiment file example:
    }
 }
 \end{verbatim}
-
+Many files are downloaded from the xSpark Master and Slaves containing application log information and system resources utilization, that are processed to create resource utilization reports and statistics and a series of charts about the application progress, the worker progress, including application and stages deadlines, actual execution times and cpu utilization. One of the features that was added by this work is the creation of Matlab interactive and zoomable charts that allow an accurate evaluation of the details of the data shown on the charts. Examples of Matlab charts are shown in \MyFig{fig:plot_app}, \MyFig{fig:plot_app_zoom},\MyFig{fig:plot_worker},\MyFig{fig:plot_worker_zoom}
+\begin{figure}[thbp]
+	\centering
+	\includegraphics[width=\columnwidth]{images/plot_app.pdf}
+	\caption{Example - Application Matlab Chart.}
+	\label{fig:plot_app}
+\end{figure}
+\begin{figure}[thbp]
+	\centering
+	\includegraphics[width=\columnwidth]{images/plot_app_zoom.pdf}
+	\caption{Example - Zoomed Details Application Matlab Chart.}
+	\label{fig:plot_app_zoom}
+\end{figure}
+\begin{figure}[thbp]
+	\centering
+	\includegraphics[width=\columnwidth]{images/plot_worker.pdf}
+	\caption{Example - Worker Matlab Chart.}
+	\label{fig:plot_worker}
+\end{figure}
+\begin{figure}[thbp]
+	\centering
+	\includegraphics[width=\columnwidth]{images/plot_worker_zoom.pdf}
+	\caption{Example - Zoomed Details Worker Matlab Chart.}
+	\label{fig:plot_worker_zoom}
+\end{figure}
+ 
 \hypertarget{download-requirements}{%
 \subsection{Download \& Requirements}\label{download-requirements}}
 
