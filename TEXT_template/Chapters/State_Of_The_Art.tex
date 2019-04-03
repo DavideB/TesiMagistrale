@@ -281,53 +281,30 @@ An example of how \textit{speed} and \textit{precision} affect resource provisio
 
 
 \section{Spark Resource Provisioning}\label{sec:spark_resource_provisioning}
-It's important to recall that the cluster manager is responsible for starting executor processes and determine where and when they will run. Using Spark’s embedded cluster manager might be a problem in terms of resource utilization when we want to execute different distributed applications at the same time. Using a single cluster manager for different distributed applications has the advantage of providing a global view on which applications are running and which we want to execute inside the cluster.
-Without a single cluster manager, we can have two main approaches
-in order to perform resource sharing and allocation:
+Spark default deployment mode is standalone, that is using its embedded cluster manager. The cluster manager is responsible for starting the executor processes and set where and when they will run. Using the cluster manager embedded in Spark might be a problem in terms of resource utilization if we want to execute many concurrent distributed applications together with Spark. The use of a single cluster manager for different distributed applications gives a global view on the running applications and which ones are waiting to execute inside the cluster.
+
+%It's important to recall that the cluster manager is responsible for starting executor processes and determine where and when they will run. Using Spark’s embedded cluster manager might be a problem in terms of resource utilization when we want to execute different distributed applications at the same time. Using a single cluster manager for different distributed applications has the advantage of providing a global view on which applications are running and which we want to execute inside the cluster.
+Without a single cluster manager, ther can be two main approaches to performing resource sharing and allocation:
 \begin{itemize}
-	\item  allowing every application to allocate all the resources in the cluster at the same time, this leads to an unfair situation of resource contention
-	\item splitting the resource pool into smaller pools, one per application.
+	\item  allow every application to allocate all the resources in the cluster at the same time: this leads to an unfair situation of resource contention
+	\item split the resource pool into smaller ones, one per application.
 \end{itemize}
-In this way we will avoid resource contention but we will
-have a less efficient utilization of the resources, because some of
-the applications might request more resources than the ones in
-the pool, meanwhile some others are using less resources than
-the allocable ones in order to execute.
-A more dynamic way of allocating resources will lead to a better resource
-utilization. Spark natively support executing on top of Apache
-Hadoop YARN and Apache Mesos cluster managers.
-Spark supports the dynamic allocation of executors, also known as
-elastic scaling, this feature allows to add and remove Spark executors
-in a dynamic way in order to match the workload.
-In traditional static allocation, a Spark application would allocate
-CPU and memory upon starting the execution, disregarding how
-much resources will effectively use later on. With dynamic allocation
-instead it is possible to allocate as much resources as they are
-necessary, in order to avoid wasting them. The number of running
-executors is scaled up and down according to the workload, in particular
-idling executors are removed and when there are tasks waiting
-to be executed and new executors are launched. Dynamic allocation can 
-be activate in Spark settings and should be used together with the
-External Shuffle Service, in this way data that have been manipulated
-from the executor is still available after the removal of the executor.
+The second approach resource contention are avoided, at the cost of a less efficient utilization of the resources, as some of the applications might request more resources than the ones assigned to their pool, while some others might end up using less resources than the one they have access to.
+A dynamic approach to resource allocation leads to a better resource utilization. Spark natively supports the execution on top of Apache Hadoop YARN and Apache Mesos cluster managers.
+Spark supports the dynamic allocation of executors, also known as elastic scaling. This feature allows addition and removal of Spark executors dynamically to follow the workload demand.
+In traditional static allocation, a Spark application would allocate CPU and memory upon application start, not caring about the level of resources effectively used later on. Dynamic allocation instead allows the allocation of as much resources as they are necessary, thus avoiding to waste them. The number of running executors follows the workload, in particular
+idle executors are removed and re-launched when there are tasks waiting 
+to be executed/ Dynamic allocation can be activated in Spark settings and should be used in conjunction with the External Shuffle Service.  Doing so, data that have been manipulated
+by an executor will still be available after the executor is removed. 
 Dynamic allocation has two different policy for scaling the executors:
 \begin{itemize}
-	\item Scale Up Policy: new executor are requested when there are
-	pending tasks, the number of executors is increased exponentially
-	because they start slow and so the application might need
-	a slightly higher number of them
-	\item Scale Down Policy: idling executors are removed after a certain
-	amount of time, this amount of time can be configured
+	\item Scale Up Policy: new executor are requested when there are pending tasks. There is an exponential increase in the number of executors, because the start is conservative, so at the end the application might need a higher number of them
+	\item Scale Down Policy: idle executors are removed after a certain amount of time, and this amount of time is configurable
 \end{itemize}
-In order for dynamic allocation to work, we must configure it, by setting
-the initial number of executors that are created when application
-starts and the minimum and maximum number of executors that can
-be reached when scaling down and up respectively. Dynamic allocation
-is available on all cluster managers currently supported by Spark,
-even in Standalone mode.
+In order for dynamic allocation to work, it must be configured the initial number of executors that are created when application starts, and the minimum and maximum number of executors that can be reached when scaling down and up respectively. Dynamic allocation is available on all cluster managers currently supported by Spark, including Standalone mode.
 
 \subsection{Apache Hadoop Yarn}\label{sec:hadoop_yarn}
-Apache Hadoop YARN (Yet Another Resource Negotiator) is the next
+Apache Hadoop YARN (Yet Another Resource Negotiator) is the next  
 generation of Hadoop’s compute platform\cite{Vavilapalli:2013:AHY:2523616.2523633}. 
 \begin{figure}
 	\centering
@@ -335,79 +312,18 @@ generation of Hadoop’s compute platform\cite{Vavilapalli:2013:AHY:2523616.2523
 	\caption[Apache Hadoop YARN Architecture]{Apache Hadoop YARN Architecture.}
 	\label{fig:apacheHadoopYarnArchitecture}
 \end{figure}
-The idea is to split
-the functionality of resource management and job scheduling and
-monitoring. This is achieved by having two different kind of daemons
-running, one global Resource Manager (RM) and a per-application
-Application Master (AM).
-Resource Manager (RM) and Node Manager (NM) form the data
-computation framework (Figure 1.4). RM is the authority that manages
-resources among all the applications that are running in the
-system, meanwhile NM is the per-machine daemon who is responsible
-for managing containers, monitoring and reporting. The perapplication
-AM has the goal of negotiating resources with RM and
-working with NM in order to execute and monitor tasks.
-Resource Manager (RM) is composed by two components: Scheduler
-and Applications Manager.
-The Scheduler is responsible for allocating resources to the various
-applications that are running, by taking into account constraints
-about capacity, queues, etc. It is a real scheduler in the sense that
-it does not perform monitoring or tracking of the application state.
-Moreover, it does not offer any guarantee that a failed application will be reexecuted
-after an application or hardware failure. The Scheduler performs
-the allocation according to the resources that are requested by
-an application; this is based on the abstract notion of container which
-has elements as memory, CPU cores, disk and network bandwidth.
-There are pluggable policy that determine the repartition of resources
-among the different applications, for example we have the Capacity
-Scheduler, designed for multi-tenant clusters, and the Fair Scheduler,
-that shares cluster resources fairly.
-The Applications Manager is responsible of accepting the submission
-of a job, it negotiates the first container that will execute the AM and
-it offers a service that can be used to restart the AM in case of failure.
-The per-application AM has the goal of negotiating the needed
-containers from the Scheduler, track their status and monitor their
-progress.
-The RM keeps a global model of the cluster state and thanks to the
-resource requirements reported by the running applications, it makes
-possible to enforce a global scheduling, but it is required to have an
-accurate understanding of the applications’ resource requirements. In
-response to AM requests, the RM generates containers together with
-tokens that grant access to resources. An extension of the protocol
-allows the RM to ask back resources from applications, for example
-when cluster resources become scarce.
-Application Master (AM) is the process that coordinates the execution
-of an application inside the cluster. It is important to remember
-that AM itself is run in the cluster, just like any other container. Periodically,
-an heartbeat is sent to the RM in order to confirm its liveliness
-and to update the Scheduler about its resource requests. After having
-modeled the application requirements, the AM encodes its preferences
-and constraints inside the heartbeat message. This information
-are stored in the form of Resource Request, containing the desired number of containers (e.g., 100 container), the resources of each container
-(e.g., <2 CPU, 2 GB>), the locality preferences and the priority of this
-resource request with respect to the other ones of this application.
-When a container lease is received, the AM can choose to modify its
-execution plan in order to take into account the abundance or scarcity
-of resources.
-Node Manager (NM) is the worker daemon in YARN, its purpose
-is to authenticate container lease, manage dependencies, monitoring
-the execution of containers and offer them a set of services. After
-having registered with the RM, the NM sends heartbeats in order to
-communicate its status and receives instructions from the RM. All
-the containers are described by a container launch context (CLC), that
-keeps track of all the environment variables, the dependencies, the security
-tokens, but also of the payloads needed by NM services and the
-commands that are needed to launch the process inside the container.
-After having validated the authenticity of the container lease, the NM
-configures the container with the specified resource constraints and
-initializes a monitoring subsystem. In order to launch the container,
-dependencies are copied into local storage. NM also has the duty of
-killing container upon a request from RM or AM, for example when a
-tenant is being evicted or when an application completes. Whenever
-a container exits, NM needs to clean the working directory. When an
-application ends, all the resources held by its container on all nodes
-are released. NM periodically checks the state of the physical machine
-and informs the RM of a possible unhealthy state.
+It separates the functionality of resource management from job scheduling and monitoring. This is done by starting two different types of daemons: a global Resource Manager (RM) and a per-application Application Master (AM). 
+
+Resource Manager (RM) and Node Manager (NM) form the data computation framework (see \MyFig{fig:apacheHadoopYarnArchitecture}). RM is the authority that manages resources among all the applications that are running in the system, while NM is the per-machine daemon who is responsible for managing containers, monitoring and reporting. The per application AM has the goal of negotiating resources with RM and working with NM in order to execute and monitor tasks. Resource Manager (RM) is composed by Scheduler and Applications Manager. 
+
+The Scheduler allocates resources to the running applications considering constraints about capacity, queues, etc. It is a pure scheduler, as it does not monitor nor it tracks any application, and it does not guarantee that a failed application will be restarted after an application or hardware failure and allocates resources upon application request. This is based on the abstract notion of container which has elements as memory, CPU cores, disk and network bandwidth. Pluggable policies determine the re-partition of resources among the different applications, for example the Capacity Scheduler, designed for multi-tenant clusters, and the Fair Scheduler, that shares cluster resources fairly. 
+
+The Applications Manager accepts the jobs submissions, negotiates the first container that will execute the AM and offers can restart the AM in case of failure. The per-application AM negotiates the containers needed from the Scheduler, track their status and monitor their progress. The RM keeps a global model of the cluster state and uses the resource requirements reported by the running applications to enforce a global scheduling.  In response to AM requests, the RM generates containers along with tokens that grant access to resources. An extension of the protocol allows the RM to get back resources from applications, for example when cluster resources become scarce. 
+
+Application Master (AM) is the process that coordinates the execution of an application inside the cluster. The AM itself is run in the cluster, just like any other container. Periodically, an heartbeat is sent to the RM in order to confirm its liveliness and to update the Scheduler about its resource requests. After having modeled the application requirements, the AM encodes its preferences and constraints inside the heartbeat message. This information is stored in the form of Resource Request, containing the desired number of containers (e.g., 10 container), the resources of each container (e.g., <3 CPU, 4 GB>), the locality preferences and the priority of this resource request with respect to the other ones of this application. When a container lease is received, the AM can choose to modify its execution plan in order to take into account the abundance or scarcity of resources. 
+
+Node Manager (NM) is the worker daemon in YARN, its purpose is to authenticate container lease, manage dependencies, monitoring the execution of containers and offer them a set of services. After having registered with the RM, the NM sends heartbeats in order to communicate its status and receives instructions from the RM. All the containers are described by a container launch context (CLC), that keeps track of all the environment variables, the dependencies, the security tokens, but also of the payloads needed by NM services and the commands that are needed to launch the process inside the container. After having validated the authenticity of the container lease, the NM configures the container with the specified resource constraints and initializes a monitoring subsystem. In order to launch the container, dependencies are copied into local storage. NM also has the duty of killing container upon a request from RM or AM, for example when a tenant is being evicted or when an application completes. Whenever a container exits, NM needs to clean the working directory. When an application ends, all the resources held by its container on all nodes are released. NM periodically checks the state of the physical machine and informs the RM of a possible unhealthy state.
+
 \subsection{Apache Mesos}\label{sec:apache_mesos}
 Apache Mesos is an open-source project used to manage computer
 clusters. 
@@ -417,29 +333,13 @@ clusters.
 	\caption[Apache Mesos Architecture]{Apache Mesos Architecture.}
 	\label{fig:apacheMesosArchitecture}
 \end{figure}
-The purpose of Mesos is to share cluster between different
-computing frameworks, such as Apache Hadoop or Message Passing
-Interface (MPI). The sharing increments the utilization of the cluster
+The purpose of Mesos is to share cluster between different computing frameworks, such as Apache Hadoop or Message Passing Interface (MPI). The sharing increments the utilization of the cluster
 and prevents per-framework data replication. 
-Mesos shares resources
-in a fine-grained way, allowing to achieve data locality. It presents
-a scheduling mechanism on two layer called resource offers. Mesos
-decides how many resources to offer to each of the running frameworks,
-meanwhile they decide how many resources to accept and
-which computation to execute on the granted resources.
-New cluster computing frameworks continue to emerge, it is clear
-that finding a framework that is optimal for all type of application
-is almost impossible. We expect that organization would like to use
-different frameworks inside the same cluster, picking the best one according
-to the kind of application that they are going to execute. Two
-classic solution are: i) statically partitioning the cluster and executing
-one framework per partition; ii) allocate a set of VMs to each of the
-frameworks. Unluckily these solution do not achieve high utilization
-and efficient data sharing. The main problem is the different allocation
-granularity of these solutions and the one of the existing frameworks,
-for example Hadoop employs a fine grained resource sharing
-model, where nodes are divided into slots and each job is composed
-by short tasks that match the slots.
+Mesos shares resources in a fine-grained way, allowing to achieve data locality. It presents
+a scheduling mechanism on two layer called resource offers. Mesos decides how many resources to offer to each of the running frameworks, meanwhile they decide how many resources to accept and
+which computation to execute on the granted resources. 
+
+New cluster computing frameworks continue to emerge, it is clear that finding a framework that is optimal for all type of application is almost impossible. We expect that organization would like to use different frameworks inside the same cluster, picking the best one according to the kind of application that they are going to execute. Two classic solution are: i) statically partitioning the cluster and executing one framework per partition; ii) allocate a set of VMs to each of the frameworks. Unluckily these solution do not achieve high utilization and efficient data sharing. The main problem is the different allocation granularity of these solutions and the one of the existing frameworks, for example Hadoop employs a fine grained resource sharing model, where nodes are divided into slots and each job is composed by short tasks that match the slots.
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{Images/apache_mesos_resource_offer_example.pdf}  
@@ -451,88 +351,36 @@ by short tasks that match the slots.
 		Agent 1.}
 	\label{fig:apacheMesosResourceOfferExample}
 \end{figure}
-The presence of short tasks allows
-us to achieve high utilization, as jobs can rapidly scale when
-new nodes are available. But it is not possible to achieve fine grained
-sharing across frameworks, because they have been developed in an
-independent way, and thus it is difficult to efficiently share the cluster
-among different frameworks.
-Mesos delegates the control over the scheduling to the different
-frameworks. In this way it is possible to have the abstraction of the
-resource offers, that encapsulate a bundle of resources that the framework
-can allocate on a node in order to execute a task. Mesos decides
-how many resources to offer to each framework, this is based on
-policies, and the framework decides which resources to accept and
-which tasks to execute on them. Even though this approach does not
-lead to a globally optimum scheduling, it has been proved that it performs
-particularly well in practice, allowing the frameworks to obtain
-near perfect data locality. Mesos provides other benefits to its users,
-for example the possibility of running different instances of the same
+The presence of short tasks allows us to achieve high utilization, as jobs can rapidly scale when new nodes are available. But it is not possible to achieve fine grained sharing across frameworks, because they have been developed in an independent way, and thus it is difficult to efficiently share the cluster among different frameworks.
+
+Mesos delegates the control over the scheduling to the different frameworks. In this way it is possible to have the abstraction of the resource offers, that encapsulate a bundle of resources that the framework can allocate on a node in order to execute a task. Mesos decides how many resources to offer to each framework, this is based on policies, and the framework decides which resources to accept and which tasks to execute on them. Even though this approach does not
+lead to a globally optimum scheduling, it has been proved that it performs particularly well in practice, allowing the frameworks to obtain near perfect data locality. Mesos provides other benefits to its users, for example the possibility of running different instances of the same
 framework or even different versions.
-Mesos is composed by a master process that manages slave daemons
-running on each cluster node and frameworks that run tasks
-on these slaves, as we can see from \myFig{fig:apacheMesosArchitecture} . Master implements
-fine-grained sharing across frameworks using resource offers. Every
-resource offer is a list of free resources on the different slave nodes.
-The master decides how many resources to offer to each framework,
-according to some policy such as fairness or priority. 
 
-Apache Mesos Resource Offer example. 1) Mesos Agent 1 reports
-free resources to the Allocation Module; 2) Allocation
-Module offers resources to Framework 1 scheduler; 3) Framework
-1 scheduler accepts resources and assign tasks; 4) Allocation
-Module launches tasks on the executor running in Mesos
-Agent 1.
+Mesos is composed by a master process that manages slave daemons running on each cluster node and frameworks that run tasks on these slaves, as we can see from  \myFig{fig:apacheMesosArchitecture}. Master implements fine-grained sharing across frameworks using resource offers. Every resource offer is a list of free resources on the different slave nodes. The master decides how many resources to offer to each framework, according to some policy such as fairness or priority. Every framework that is running on Mesos is composed by two components: a scheduler, that registers with the master in order to obtain the resource
+offers, and an executor process that is launched on the slave node in order to execute framework’s tasks. While the master chooses how many resources to offer, the scheduler chooses which resources to use among those offered. When an offer is accepted, the scheduler sends to the master the description of the tasks that should be executed. The resource offer process is repeated every time tasks are finished and when there are new free resources. In order to maintain a light interface, Mesos does not ask the frameworks to specify their resource requirements or constraint, instead it gives them the possibility of refusing offered resources. Mesos allows frameworks to set up a set of filters, in the form of boolean predicates, specifying the conditions on which the framework will always refuse a proposal
+(e.g., providing a whitelist of nodes it can run on). In  \MyFig{fig:apacheMesosResourceOfferExample} we have an example of resource offer process.
 
-Every framework that is running on Mesos is composed by two components: a
-scheduler, that registers with the master in order to obtain the resource
-offers, and an executor process that is launched on the slave
-node in order to execute framework’s tasks. While the master chooses
-how many resources to offer, the scheduler chooses which resources
-to use among those offered. When an offer is accepted, the scheduler
-sends to the master the description of the tasks that should be
-executed. The resource offer process is repeated every time tasks are
-finished and when there are new free resources. In order to maintain
-a light interface, Mesos does not ask the frameworks to specify
-their resource requirements or constraint, instead it gives them the
-possibility of refusing offered resources. Mesos allows frameworks to
-set up a set of filters, in the form of boolean predicates, specifying
-the conditions on which the framework will always refuse a proposal
-(e.g., providing a whitelist of nodes it can run on).
-In Figure 1.6 we have an example of resource offer process.
-1. Agent 1 reports to master that it has 4 CPUs and 4 GB of memory
-free. Master invokes its allocation module policy, which tells
-that framework 1 should be offered all the resources.
-2. Master sends a resource offer describing the resources available
-on agent 1 to framework 1.
+Resource allocation is performed by a pluggable allocation module, such that it is possible to meet different organization needs. The two basic allocation modules are fair sharing and strict priorities, similar to those available on Apache Hadoop. In the normal situation, Mesos
+does exploits the fact that the majority of the tasks are short and so it reallocates resources only when tasks end. This usually happens frequently and so a new launched framework can obtain its share quickly. The allocation module can also revoke tasks, killing them, but before doing so it concedes a grace period to the framework in order to terminate them properly. The allocation module chooses the policy to revoke tasks, it needs to take into account the fact that this might be of little impact on some framework (e.g., MapReduce), but it can be critical in frameworks that have interdependent tasks (e.g., MPI). For this reason, the allocation module exposes a guaranteed allocation for each of the frameworks, an amount of resources that
+the framework can allocate without the risk of losing tasks, this value can be retrieved by the framework using an API call. If the framework total allocation is under the guaranteed one, it has no risk of seeing its task killed, on the other hand instead, if the allocation is over the
+guaranteed one, any of its tasks can be terminated.
 
+Performance isolation between frameworks executor running in the same slave is achieved by leveraging existing OS isolation mechanism. Since they are platform dependent, pluggable isolation modules are supported.
 
-\subsection{Spark on Yarn}{subsec:sparkOnYarn}
-Support for running Spark on YARN was added to Spark in version
-0.6.0 and has been improved in subsequent releases~\cite{misc:SparkOnYarn}.
-When running on YARN, each Spark executor is run inside a YARN
-container. Spark supports two different modes to run on YARN, the
-Yarn-cluster and Yarn-client mode.
-In client mode, as shown in \myFig{fig:sparkOnYarnClientMode}, the driver program is run
-inside the client process. In this way, the Application Master (AM) that
-is run in a YARN container is used only to request resources to the Resource
-Manager (RM). This mode is useful for interactive applications
-and for debugging purposes, since you can see applications’ output
-immediately on the client side process. If the client disconnects from
-the cluster, the Spark application will terminate, this is due to the fact
-that the driver process resides on the client.
-In cluster mode instead, as shown in Figure 1.10, Spark driver program
-is run inside the AM process managed by YARN. After initializing
-the application, client can disconnect from the cluster and reconnect
-later on. This mode makes sense when using Spark on YARN in
-production jobs.
+\subsection{Spark on Yarn}\label{subsec:sparkOnYarn}
+Support for running Spark on YARN was added to Spark in version 0.6.0 and has been improved in subsequent releases~\cite{misc:SparkOnYarn}.
+
+When running on YARN, each Spark executor is run inside a YARN container. Spark supports two different modes to run on YARN, the Yarn-cluster and Yarn-client mode.
+
+In client mode, as shown in \myFig{fig:sparkOnYarnClientMode}, the driver program is run inside the client process. In this way, the Application Master (AM) that is run in a YARN container is used only to request resources to the Resource Manager (RM). This mode is useful for interactive applications and for debugging purposes, since you can see application output
+immediately on the client side process. If the client disconnects from the cluster, the Spark application will terminate, this is due to the fact that the driver process resides on the client.
+
+In cluster mode instead, as shown in \MyFig{fig:sparkOnYarnClusterMode}, Spark driver program
+is run inside the AM process managed by YARN. After initializing the application, client can disconnect from the cluster and reconnect later on. This mode makes sense when using Spark on YARN in production jobs. 
+
 Running on top of YARN cluster manager has some benefits. First
-of all YARN allows to dynamically share the cluster resources between
-the different frameworks that are running together. For example
-we can run MapReduce jobs after running Spark jobs without the
-need of changing YARN configurations. Moreover, YARN supports
-for categorizing, isolating and prioritizing workloads and employs
-security policies, in this way Spark can use secure authentication between
+of all YARN allows to dynamically share the cluster resources between the different frameworks that are running together. For example we can run MapReduce jobs after running Spark jobs without the need of changing YARN configurations. Moreover, YARN supports for categorizing, isolating and prioritizing workloads and employs security policies, in this way Spark can use secure authentication between
 its processes.
 \begin{figure}
 	\centering
@@ -564,76 +412,35 @@ about 6-10\% more memory with respect to the standalone execution,
 this is due to the fact that this extra amount of off-heap memory is
 allocated in order to take into account YARN overheads.
 
-\subsection{Spark on Mesos}{subsec:sparkOnMesos}
-Support for running Spark on Mesos was added to Spark in version
-1.5. Spark on Mesos can be executed in two different modes: coarse-grained
-and fine-grained \cite{misc:SparkOnMesos}.
-In coarse-grained mode, as shown in \myFig{fig:sparkOnMesosCoarseGrainedMode}, 
-each Spark application is submitted to Mesos master as a framework and Mesos
-slaves will run tasks for the Spark framework that are Spark executors.
-Mesos tasks are launched for each Spark executor and those
-Mesos tasks stay alive during the lifetime of the application unless
-we are using dynamic allocation or the executor is killed for various
-reasons. The advantage of coarse-grained mode is in a much lower task
-startup overhead, with respect to the other mode, and so it is good
+\subsection{Spark on Mesos}\label{subsec:sparkOnMesos}
+Support for running Spark on Mesos was added to Spark in version 1.5. Spark on Mesos can be executed in two different modes: coarse-grained and fine-grained \cite{misc:SparkOnMesos}.
+In coarse-grained mode, as shown in \myFig{fig:sparkOnMesosCoarseGrainedMode}, each Spark application is submitted to Mesos master as a framework and Mesos slaves will run tasks for the Spark framework that are Spark executors. Mesos tasks are launched for each Spark executor and those Mesos tasks stay alive during the lifetime of the application unless we are using dynamic allocation or the executor is killed for various reasons. The advantage of coarse-grained mode is in a much lower task startup overhead, with respect to the other mode, and so it is good
 for interactive sessions.
-The drawback is that we are reserving Mesos resources for the complete
-duration of the application, unless dynamic allocation is active.
-Dynamic allocation allows to add and remove executors based on
-load: i) kill executor when they are idle, ii) add executors when tasks
-queue up in the scheduler. To use dynamic allocation it is required
-that the external shuffle service is running on each node.
-In fine-grained mode, shown in \myFig{fig:sparkOnMesosFineGrainedMode}, 
-Mesos tasks are launched for each Spark task, and those tasks die as soon as Spark tasks are done. This mode has too much overhead in case that Spark has too
-many tasks, for example if Spark application has 10,000 tasks, then
-Spark needs to be installed 10,000 times on Mesos agents. Because
-of this huge overhead, fine-grained mode has been deprecated since
-Spark version 2.0.0. This mode allows multiple instances of Spark to
-share cores at a very fine granularity, but it comes with an additional
-overhead in launching each task. Thus this mode is inappropriate
-for low-latency requirements like interactive queries or serving web
-requests, instead it is fine for batch and relatively static streaming.
-Similarly to what happens on YARN, it is possible to run spark in
-Mesos-client or Mesos-cluster mode. In client mode, the driver process
-is executed in the client machine that submits the job, so it is required
-that it stays connected to the cluster for the entire time of the application
-execution. In cluster mode instead, the driver program is run on
-a machine of the cluster.
+
+The drawback is that we are reserving Mesos resources for the complete duration of the application, unless dynamic allocation is active. Dynamic allocation allows to add and remove executors based on load: i) kill executor when they are idle, ii) add executors when tasks
+queue up in the scheduler. To use dynamic allocation it is required that the external shuffle service is running on each node.
+
+In fine-grained mode, shown in \myFig{fig:sparkOnMesosFineGrainedMode}, Mesos tasks are launched for each Spark task, and those tasks die as soon as Spark tasks are done. This mode has too much overhead in case that Spark has too many tasks, for example if Spark application has 10,000 tasks, then Spark needs to be installed 10,000 times on Mesos agents. Because
+of this huge overhead, fine-grained mode has been deprecated since Spark version 2.0.0.         This mode allows multiple instances of Spark to share cores at a very fine granularity, but it comes with an additional  overhead in launching each task. Thus this mode is inappropriate
+for low-latency requirements like interactive queries or serving web requests, instead it is fine for batch and relatively static streaming. 
+
+Similarly to what happens on YARN, it is possible to run spark in Mesos-client or Mesos-cluster mode. In client mode, the driver process
+is executed in the client machine that submits the job, so it is required that it stays connected to the cluster for the entire time of the application execution. In cluster mode instead, the driver program is run on a machine of the cluster.
 
 \section{Virtualization and Containerization}
-Virtualization refers to creating the virtual version of something, included
-hardware components, storage devices and computer networks.
-Virtualization is born in 1960's, as a way to logically partition the system
-resources offered by a mainframe computer between many different
-applications. From this point, the meaning of the word has been
-widely extended.
-Virtualization is a technology that allows creating multiple simulated
-environments or dedicated resources from a single unique physical
-hardware system. An hypervisor is a software that can directly
-connect to the hardware, with the purpose of splitting the unique
-physical system into separated environments, different from each other 
-and secure, known as virtual machines (VM's). These VM's rely on
-the hypervisor ability to separate the hardware resources and distribute
-them in a proper way.
-The original physical machine equipped with the hypervisor is
-called host, meanwhile the VM's are called guests. These guests use the computation resources, such as CPU, memory and storage, as a set of resources that are easily re-allocatable. The operators can control the virtual instances of CPU, memory, storage
-and other resources, so that the guests can receive all the resources they need
-to execute their task. The words host and guest are used to distinguish the software that runs on the physical hardware from the software that is running on the virtual machines.
-Hardware virtualization or platform virtualization refer to the creation
-of a VM that acts like a real computer with an OS. The software
-that is run in this VM is separated from the underlying hardware.
+Virtualization refers to creating the virtual version of something, included hardware components, storage devices and computer networks.
+Virtualization is born in 1960's, as a way to logically partition the system resources offered by a mainframe computer between many different applications. From this point, the meaning of the word has been widely extended.
+
+Virtualization is a technology that allows creating multiple simulated environments or dedicated resources from a single unique physical hardware system. An hypervisor is a software that can directly connect to the hardware, with the purpose of splitting the unique physical system into separated environments, different from each other and secure, known as virtual machines (VM's). These VM's rely on the hypervisor ability to separate the hardware resources and distribute them in a proper way. The original physical machine equipped with the hypervisor is called host, meanwhile the VM's are called guests. These guests use the computation  resources, such as CPU, memory and storage, as a set of resources that are easily re-allocatable. The operators can control the virtual instances of CPU, memory, storage and other resources, so that the guests can receive all the resources they need to execute their task. The words host and guest are used to distinguish the software that runs on the physical hardware from the software that is running on the virtual machines.
+
+Hardware virtualization or platform virtualization refer to the creation of a VM that acts like a real computer with an OS. The software that is run in this VM is separated from the underlying hardware.
 This allows us to run particular configurations, for example we run a
 computer with a Windows OS that hosts a VM with Linux as guest OS.
+
 There are at least two different hardware virtualization types:
 \begin{itemize}
-	\item full virtualization: it completely simulates the hardware in order
-	to allow the software, typically a guest OS, to be run without the
-	need of modifications
-	\item paravirtualization: the hardware environment is not simulated,
-	anyway guest programs are run in isolated domains, as if they
-	were run in completely separated systems. Guest programs need
-	to be modified in a specified way in order to run in this kind
-	of environment.
+	\item full virtualization: it completely simulates the hardware in order to allow the software, typically a guest OS, to be run without the need of modifications
+	\item paravirtualization: the hardware environment is not simulated, anyway guest programs are run in isolated domains, as if they were run in completely separated systems. Guest programs need to be modified in a specified way in order to run in this kind of environment.
 \end{itemize}
 \begin{figure}
 	\centering
@@ -641,90 +448,45 @@ There are at least two different hardware virtualization types:
 	\caption[Full virtualization and paravirtualization]{Full virtualization and paravirtualization.}
 	\label{fig:virtualizationParavirtualization}
 \end{figure}
+
 In \myFig{fig:virtualizationParavirtualization}, we can see the differences between the two kind
-of virtualization. In paravirtualization, the VM presents a different
-interface compared to the one of a physical machine. This requires
-modification in the guest OS in order to allow its execution inside
-the VM. The hypervisor exposes a set of APIs that the guest OS must
-use to execute privileged instructions. Calls to these particular functions are often defined as Hypercalls. In full virtualization instead, VM have the same interface as the physical ones. Ideally, the guest OS would not be able to determine if it is being
-run on a physical or virtual machine. The great advantage of full
-virtualization is that we do not need to modify the OS. In this way
-the hypervisor can adopt a trap system to execute privileged
-instructions. We can improve the efficiency of the virtualization by using hardware assisted virtualization, in particular we can decide to use CPU's that
-provide efficient support for virtualizing on hardware, but also other
-kind of hardware components that can improve the performance of
-the guest environments.
-Hardware virtualization can be seen as a trend of the enterprise IT
-that includes autonomic computing, a scenario in which the different
-environments are able to manage themselves based on the detected level of 
-activity, and utility computing, where the processing power is seen
-as a utility that users pay only when needed. The purpose of virtualization
-is to centralize the administrative tasks, offering scalability and
-good resource utilization. With virtualization, different OS can run
-in parallel on a single CPU. This parallelism reduces overhead cost
-in a way different from multitasking, where different
-programs are executed in parallel on the same OS. 
-Thanks to virtualization, an enterprise IT can better handle updates and rapid changes in OS and applications, with little impact on users. Virtualization allows organizations
-to have better efficiency and availability of resources and
-applications.
-It is important to remember that hardware emulation is a complete
-different thing from hardware virtualization, in particular with emulation
-we have a piece of hardware that imitates another piece of
-hardware. In virtualization instead a hypervisor, which is a piece
-of software, mimics a piece of hardware or even an entire computer.
-Moreover, a hypervisor is not an emulator, even though both are
-software programs that mimic hardware, their domain of use is different.
+of virtualization. In paravirtualization, the VM presents a different interface compared to the one of a physical machine. This requires modification in the guest OS in order to allow its execution inside the VM. The hypervisor exposes a set of APIs that the guest OS must use to execute privileged instructions. Calls to these particular functions are often defined as Hypercalls. In full virtualization instead, VM have the same interface as the physical ones. Ideally, the guest OS would not be able to determine if it is being run on a physical or virtual machine. The great advantage of full virtualization is that we do not need to modify the OS. In this way the hypervisor can adopt a trap system to execute privileged instructions. 
+
+We can improve the efficiency of the virtualization by using hardware assisted virtualization, in particular we can decide to use CPU's that provide efficient support for virtualizing on hardware, but also other kind of hardware components that can improve the performance of the guest environments.
+
+Hardware virtualization can be seen as a trend of the enterprise IT that includes autonomic computing, a scenario in which the different environments are able to manage themselves based on the detected level of activity, and utility computing, where the processing power is seen
+as a utility that users pay only when needed. The purpose of virtualization is to centralize the administrative tasks, offering scalability and good resource utilization. With virtualization, different OS can run in parallel on a single CPU. This parallelism reduces overhead cost in a way different from multitasking, where different programs are executed in parallel on the same OS. Thanks to virtualization, an enterprise IT can better handle updates and rapid changes in OS and applications, with little impact on users. Virtualization allows organizations to have better efficiency and availability of resources and applications.
+
+It is important to remember that hardware emulation is a complete different thing from hardware virtualization, in particular with emulation we have a piece of hardware that imitates another piece of hardware. In virtualization instead a hypervisor, which is a piece of software, mimics a piece of hardware or even an entire computer. Moreover, a hypervisor is not an emulator, even though both are software programs that mimic hardware, their domain of use is different.
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{Images/vm_vs_container.pdf}  
 	\caption[Architecture of virtual machines and containers]{The difference in  architecture between virtual machines and containers.}
 	\label{fig:vmVsContainer}
 \end{figure}
-Containerization is a OS-level virtualization technique that allows
-deploying and executing distributed applications without the need
-of launching an entire VM for each of the applications (\myFig{fig:vmVsContainer}).
-These multiple isolated systems are called containers. They are executed
-on top of a single host controller and access a single kernel.
-Since containers share the same OS kernel of the host, they can be a lot
-more efficient than a VM, that instead needs a separate instance of the
-OS. Containers own all the different components that are needed in
-order to execute the desired software, such as files, environment variables
-and libraries. The host OS controls the access of the container to
-the physical resources, such as CPU and memory, in order to prevent
-a single container from occupying the entire resources offered by the
-host.
-The main advantages of containerization come from efficiency in
-terms of memory, CPU and storage, when compared to traditional
-hardware virtualization. Since containers do not have the same overhead
-of VM, in particular we do not need different instances of the OS and 
-is possible to support more containers on the same infrastructure.
-Containerization offers better performances since there is a single OS
-that takes care of all the hardware calls. A special advantage 
-of the containers is the fact that they can be created much faster than
-instances based on an hypervisor. This allows to have a more agile environment and allows the creation of new approaches to virtualization, such as microservices and continuous integration and delivery of services.
-Potential disadvantages of containerization are the absence of
-isolation from the host OS. Since containers share the same host OS, a
-potential security threat might easily gain access to the entire system.
-This does not happen when using virtualization based on a hypervisor,
-since in this case the only compromised component would be the
-VM. A way to circumvent this problem, is the creation of 
-containers inside an OS run from a VM. This prevents the
-security breach at container level from letting the attacker gain access
-to the OS of the physical host. Another little disadvantage of containerization is that containers must execute the same OS as the base OS,
-meanwhile instances based on an hypervisor are allowed to execute
-different OSs. Because of this, a container that is running on a Linux
-host, can neither execute an instance of Windows OS nor a Windows
-designed application.
-Containerization has gained more and more relevance thanks to
-the wide spread of the open source software Docker, that has developed
-aenhanced portability to the containers, allowing them to
-be moved from different systems that share the same kind of host
-OS without the need to change even a single line of code. In particular, with
-Docker container there are no environment variables that must be set
-on the guest OS or library dependencies that need to be managed.
 
-%\subsection{Docker}{subsec:docker}
-%Docker is an open source project that automatizes the deployment of applications inside software containers, giving a further abstraction thanks to OS level virtualization provided by Linux OS. Docker uses isolation functionalities provided by Linux kernel, such as cgroups and namespaces \cite{misc:Docker} in order to allow the coexistence of independent containers on the same Linux instance, avoiding the installation and maintenance of a VM. Linux kernel namespaces isolate what the application ca see of the operating environment, including process tree, network, user ids and mounted file system. Cgroups instead provide resource isolation, including CPU, memory, I/O devices and network.Docker implements a high level API in order to manage containers that execute in isolated environments. Since it uses Linux kernel functionalities, a Docker container, compared to a VM, does not includes a separated OS. Instead, it uses the kernel functionalities and exploits resource isolation and separated namespace in order to separate isolate what each application can see of the underlying OS. Docker can access Linux kernel virtualization functionalities using different ways, for example directly using libcontainer or indirectly using libvirt, Linux Containers (LXC) or systemd-nspawn (\myFig{fig:docker}). Using containers, resources can be isolated, services can be limited and processes can be started in a way that each of them has a private perspective of the OS, with their own identifier, file system and network interface. More container can share the same kernel, but each of them can be forced to use a different amount of resources such as CPU, memory and I/O. By using Docker we can create and manage container in a way that simplifies the creation of distributed systems, allowing different applications and processes to work in an autonomous way on the same physical machine or on different virtual machines. This allows us to deploy new nodes only when necessary, in order to follow an evolution style that is similar to the platform as a service one.
+Containerization is a OS-level virtualization technique that allows deploying and executing distributed applications without the need of launching an entire VM for each of the applications (\myFig{fig:vmVsContainer}). These multiple isolated systems are called containers. They are executed on top of a single host controller and access a single kernel.
+Since containers share the same OS kernel of the host, they can be a lot more efficient than a VM, that instead needs a separate instance of the OS. Containers own all the different components that are needed in order to execute the desired software, such as files, environment variables and libraries. The host OS controls the access of the container to the physical resources, such as CPU and memory, in order to prevent a single container from occupying the entire resources offered by the host.
+
+The main advantages of containerization come from efficiency in terms of memory, CPU and storage, when compared to traditional hardware virtualization. Since containers do not have the same overhead of VM, in particular we do not need different instances of the OS, it is possible to support more containers in the same infrastructure. Containerization offers better performances since there is a single OS that takes care of all the hardware calls. A particular point of interest for the container is the fact that they can be create much faster than
+the instances that are based on an hypervisor, this allows to have a more agile environment and allows the creation of new approaches, such as the microservices and continuous integration and delivery ones. 
+
+Potential disadvantages of containerization might be the absence of isolation from the host OS. Since containers share the same host OS, a potential security threat might easily gain access to the entire system. This did not happen when using virtualization based on an hypervisor,
+since in this case the only compromised component would be the VM. In order to circumvent this problem, a solution might be creating containers inside an OS that is run from a VM, this prevents the security breach at container level from letting the attacker gain access to the OS of the physical host. Another little disadvantage of containerization is that containers must execute the same OS as base OS, meanwhile instances based on an hypervisor are allowed to execute different OSs. Because of this, a container that is running on a Linux host, can neither execute an instance of Windows OS nor a Windows designed application.
+
+Containerization has gained more and more relevance thanks to the diffusion of the open source software Docker, that has developed a way to give more portability to the containers, allowing them to be moved from different systems that share the same kind of host OS without the need for changing lines of code. In particular, with Docker container there are no environment variables that must be set on the guest OS or library dependencies that need to be managed.
+
+
+%\subsection{Docker}\label{sec:docker}
+%Docker is an open source project that automatizes the deployment of applications inside software containers, giving a further abstraction thanks to OS level virtualization provided by Linux OS. Docker uses isolation functionalities provided by Linux kernel, such as cgroups and namespaces [8] in order to allow the coexistence of independent containers on the same Linux instance, avoiding the installation and maintenance of a VM.
+
+%Linux kernel namespaces isolate what the application ca see of the operating environment, including process tree, network, user ids and mounted file system. Cgroups instead provide resource isolation, including CPU, memory, I/O devices and network.
+
+%Docker implements a high level API in order to manage containers that execute in isolated environments. Since it uses Linux kernel functionalities, a Docker container, compared to a VM, does not includes a separated OS. Instead, it uses the kernel functionalities and exploits resource isolation and separated namespace in order to separate what each application can see of the underlying OS. Docker can access Linux kernel virtualization functionalities using different ways, for example directly using libcontainer or indirectly using libvirt, Linux Containers (LXC) or systemd-nspawn (\myFig{fig:docker}). 
+
+%Using containers, resources can be isolated, services can be limited and processes can be started in a way that each of them has a private perspective of the OS, with their own identifier, file system and network interface. More container can share the same kernel, but each of them can be forced to use a different amount of resources such as CPU, memory and I/O. 
+
+%By using Docker we can create and manage container in a way that simplifies the creation of distributed systems, allowing different applications and processes to work in an autonomous way on the same physical machine or on different virtual machines. This allows us to deploy new nodes only when necessary, in order to follow an evolution style that is similar to the platform as a service one.
 %\begin{figure}
 %	\centering
 %	\includegraphics[width=\columnwidth]{Images/docker.pdf}  
@@ -733,9 +495,11 @@ on the guest OS or library dependencies that need to be managed.
 %\end{figure}
 
 \section{Symbolic Execution}
+In computer science, the term symbolic execution refers to a software program analysis technique used to determine which data inputs cause the execution of each part of a program.
+
 In this section we present an overview of \textit{symbolic execution}, taken primarily from a research work of Baldoni et al~\cite{Baldoni:2018:SSE:3212709.3182657}.
 
-In computer science, the term symbolic execution refers to a software program analysis technique used to determine which data inputs cause These execution of each part of a program. It was introduced in the mid '70s~\cite{K-ICRS75,SELECT-ICRS75,K-CACM76,H-TSE77} mainly to test whether a software program could violate certain properties, e.g. that no divisions by zero are performed, no \texttt{null} pointers get dereferenced, no access to protected data can happen by unathorized users, etc. In general, it's not possible to decide every possible program property by means of automated checks, for example we cannot predict the target of an indirect jump. %, as it depends on values that are known at runtime. 
+ It was introduced in the mid '70s~\cite{K-ICRS75,SELECT-ICRS75,K-CACM76,H-TSE77} mainly to test whether a software program could violate certain properties, e.g. that no divisions by zero are performed, no \texttt{null} pointers get dereferenced, no access to protected data can happen by unathorized users, etc. In general, it's not possible to decide every possible program property by means of automated checks, for example we cannot predict the target of an indirect jump. %, as it depends on values that are known at runtime. 
 In practice, approximate and heuristic-based analyses are used in many cases, even in the field of mission-critical and security applications.
 
 Software testing is performed to check that certain program properties hold for any possible usage scenario. A viable approach would be to test the program using a wide range of different, possibly random inputs. As the problem may occur only for very specific input values, we need to automate the exploration of the domain of the possible input data. 
