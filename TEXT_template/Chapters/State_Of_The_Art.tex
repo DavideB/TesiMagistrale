@@ -7,7 +7,7 @@
 %\end{flushright} 
 
 \section{Big Data}\label{sec:big_data}
-\lettrine[lines=4]{\textcolor{purple}{T}}{he} term "big data" refers to a  research branch that deals with methodologies to analyze and extract information from data sets containing data that can be structured, like in the traditional relational databases, semi-structured, like in the self-described XML or JSON documents, or unstructured, like in the logfiles collected mostly by web applications to monitor usage or other user's preferences. More properly, we call big data those that cannot be handled using traditional database and software technologies. 
+\lettrine[lines=4]{\textcolor{purple}{T}}{he} term "big data" refers to a  research branch that deals with methodologies to analyze and extract information from data sets containing data that can be structured, as in the traditional relational databases, semi-structured, like the self-described XML or JSON documents, or unstructured, as the logfiles collected mostly by web applications to monitor usage or other user's preferences. More properly, we call big data those that cannot be handled using traditional database and software technologies. 
 %Today, every second 8,411 Tweets are sent, 902 Instagram photos are uploaded, 1,502 Tumblr posts are created, 3,690 Skype calls are done, 73,116 Google searches are performed and 2,780,000 emails are sent\footnote{Data source: \url{http://www.internetlivestats.com/}}~\cite{misc:InternetLiveStats}. 
 IDC~\cite{misc:IDC} has predicted that by 2020 one tenth of the world’s data will be produced by machines. The organisation forecast that in five years time the amount of connected devices communicating over the internet will reach 32 billion and generate 10\% of the world’s data.
 This data is collected and analyzed. 
@@ -16,7 +16,10 @@ This data is collected and analyzed.
 
 \subsection{Batch Processing: Hadoop}\label{sec:map_reduce_hadoop}
 %\section{Hadoop}\label{sec:hadoop}
-MapReduce is a software framework introduced by Google in order to support the distributed computation of large dataset in cluster of computers. The framework is inspired by map and reduce functions used in functional programming, even though their purpose in the MapReduce framework is not the same as in the original form.
+Hadoop uses the Map-Reduce programming model that was firstly introduced by Google~\cite{misc:GoogleMapReduce} and consists of two distinct phases: Map and Reduce.
+%MapReduce is a software framework firstly introduced by Google in order to support the distributed computation of large dataset in cluster of computers. The framework is inspired by map and reduce functions used in functional programming, even though their purpose in the MapReduce framework is not the same as in the original form.
+
+The former processes and \textit{transforms} a block of data to produce key-value pairs (tuples) as intermediate outputs, the latter \textit{aggregates} these tuples into a final output.
 There are available MapReduce libraries written in different programming languages. 
 \begin{figure}
 	\centering
@@ -35,8 +38,8 @@ MapReduce is a programming framework that allows us to perform distributed and p
 	\item Then, the reducer aggregates those intermediate data tuples (intermediate key-value pair) into a smaller set of tuples or key-value pairs which is the final output.
 \end{itemize}
 
-There are open source implementation of the MapReduce framework, for example Apache Hadoop.
-The MapReduce framework is composed by different functions for each step:
+Open source implementation of the MapReduce framework, include Apache Hadoop~\cite{misc:ApacheHadoop}. 
+The MapReduce framework is composed by the following functions:
 \begin{enumerate}
 	\item Input Reader
 	\item Map Function
@@ -46,21 +49,16 @@ The MapReduce framework is composed by different functions for each step:
 	\item Output Writer
 \end{enumerate}
 
-The Input Reader reads the data from mass memory and splits the input in S different splits, with a fixed dimensions (e.g., 64 MB) that are successively distributed to M machines of the cluster that have the Map Function. The Input Reader has also the goal of generating a pair (key, value). The N machine of the cluster are divided in 1 master,
-whose goal is to detect idling slaves and assign them a task, and N - 1 slaves that receive the tasks assigned by the master node. In total, M Map tasks and R Reduce tasks are assigned. A slave that has been assigned the M-th task reads the content of the input, extracts the (key, value) pairs and send them to the Map function defined
-by the user, that generates zero or more (key, value) pairs as output. These pairs are buffered in memory. Periodically the buffered pairs are cached on disk and partitioned in R sections by the partition function. The addresses of the partitioned sections are sent to the master node which is responsible of rotating the location of the slaves that
-will process the Reduce function. Between the slave with the Map function and the one with the Reduce one, all the pairs are reordered in order to find the ones that point at the same value, and thus also have the same key.  
-The so called shuffling phase is the process that is used to transfer data from mappers to reducers. Once all the keys that point to the same value have been found using the compare function, a merge operation is performed. The sorting operation is useful because in this way the reducer can know when a new reduce task should start. For each of the keys, the associated slave iterates on all the keys, takes the values with the same key and then applies the Reduce function defined by the user, generating one or more element in output. The Output Writer has the goal of writing the results back to mass storage.
+The Input Reader reads data from mass storage and splits it in many different fragments of fixed size (e.g., 128 MB) and then it distributes them to the servers of the cluster hosting the Map function. It also generates a (key, value) pair. One of the servers of the cluster is elected to be the master, and is in charge of detecting idle slaves and assign them a task, and the others are slaves that are assigned tasks by the master. Each slave running a task reads the content of the input, extracts the (key, value) pairs and send them to the user=defined Map function, that generates any (key, value) pairs as output, that are stored in memory and periodically cached on disk. They are also partitioned in sections by the partition function. The addresses of the partitioned sections are sent to the master node which is responsible of rotating the location of the slaves that process the Reduce function. All the pairs are reordered while transitioning between the slave with the Map function and the slave with the Reduce one, in order to group pairs with the same key on the same server. This is the shuffling phase. Once all the keys that point to the same value are discovered using the compare function, a merge is done. Ssorting is useful so that the reducer knows when a new reduce task should start. For each key, the Reduce function defined by the user is applied to the values having the same key, generating one or more ouput element. The Output Writer writes the results to mass storage.
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{Images/word_count_example.pdf}  
 	\caption[map-reduce model]{Map-Reduce word count job example. Counts the occurrence of each word in input}
 	\label{fig:wordCountExample}
 \end{figure}
-A sample word count application can be seen in \myFig{fig:wordCountExample} The input is a document containing words, our goal is to compute the number of occurrence of each of the words in the document. Each Map task applies its function on a line of the document, emitting for each of the words in the line a pair (’word’, 1). For example if the input line is "Dear Bear River", it is split into ["Dear", "Bear", "River"] and then mapped into [("Dear", 1), ("Bear", 1), ("River", 1)]. After shuffling the map results, the Reduce task receives a word and a list containing as many ones as the times the word appeared in the document, the reduce function will simply sum the ones in the list, emitting as a
-result the pair (’word’, ’count’). For example, a reducer can receive the key "Bear" with list of values (1, 1), this is reduced into ("Bear", 2). Reducers results are then collected and stored in mass storage.
+A sample word count application is shown in \myFig{fig:wordCountExample} The input is a document containing words, and we have to compute the cardinality of the occurrence of each word in the document. Each Map task is applied to a line of the document, producing pair (’word’, 1) for each word. For example if the input line is "Dear Bear River", it is split into ["Dear", "Bear", "River"] and then mapped into [("Dear", 1), ("Bear", 1), ("River", 1)]. After shuffling the results of the Map, the Reduce task receives a word and a list containing as many ones as the cardinality of the word occurrence in the document. The Reduce function will sum the ones in the list and producing as a result the pair (’word’, ’count’). For example, a reducer can receive the key "Bear" with list of values (1, 1), this is reduced into ("Bear", 2). Reducers results are then collected and storedto disk.
 
-Apache Hadoop\footnote{url: https://hadoop.apache.org/docs/} is an open-source framework for distributed storage and processing of big datasets using MapReduce programming model.
+Apache Hadoop\footnote{url: https://hadoop.apache.org/docs/} is an open-source framework for distributed storage and processing of big data sets using MapReduce programming model.
 
 \begin{figure}
 	\centering
@@ -69,21 +67,11 @@ Apache Hadoop\footnote{url: https://hadoop.apache.org/docs/} is an open-source f
 	\label{fig:hadoopMapReduceArchitecture}
 \end{figure}
 
-Apache Hadoop MapReduce cluster have a centralized structure
-composed by a single master Job Tracker (JT) and multiple worker nodes running Task Tracker (TT), as shown in  \myFig{fig:hadoopMapReduceArchitecture} JT main goal
-is organizing the job tasks on the slave nodes and continuously monitor
-the Task Trackers by means of heartbeats. Heartbeats provide a way to retrieve information about the liveliness of the slaves and to
-inspect the progress of the executions of the different tasks. In order
-to be fault tolerant, if a task execution fails, it is re-executed possibly
-on a different slave. JT has the role of the cluster manager, so it
-needs also to check the admissibility of the submitted MapReduce
-jobs. TT have the objective of running the assigned task. They reply to
-heartbeats in order to affirm their liveliness and to update the master
-about the progress of the assigned tasks. They are configured with a
-fixed number of map and reduce task slots.
-As previously introduced, Apache Hadoop also offers a distributed file-system that stores data on different machine, 
-providing an high aggregate bandwidth across the cluster. This functionality is called Hadoop Distributed File System (HDFS)\footnote{\textit{HDFS Architecture Guide.} url:  https://hadoop.apache.org/docs/r1.2.1/hdfs\_design.html}. 
-It is highly fault tolerant and designed to be deployed on low cost hardware.
+Apache Hadoop MapReduce cluster has a centralized structure composed by a master Job Tracker (JT) and multiple worker nodes running Task Tracker (TT), as shown in  \myFig{fig:hadoopMapReduceArchitecture}. JT organizes the job tasks on the slave nodes and continuously polls the Task Trackers by means of heartbeats. Heartbeats retrieve information about the liveliness of the slaves and to inspect the progress of the task  executions. If a task execution fails, it is re-executed possibly on a different slave. JT is also the cluster manager, so it check the eligibility of the submitted MapReduce jobs. TT runs the assigned task and reply to heartbeats in order to affirm their liveliness and to update the master
+about the progress of the assigned tasks. They are configured with a fixed number of map and reduce task slots.
+Apache Hadoop also offers a distributed file-system that stores data on several machine, 
+providing a high aggregate bandwidth across the cluster. It is called Hadoop Distributed File System (HDFS)\footnote{\textit{HDFS Architecture Guide.} url:  https://hadoop.apache.org/docs/r1.2.1/hdfs\_design.html}. 
+It is highly fault tolerant and designed to run on commodity hardware.
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{Images/hdfs_1.pdf}  
@@ -91,32 +79,22 @@ It is highly fault tolerant and designed to be deployed on low cost hardware.
 	\label{fig:hdfsNodeStruct}
 \end{figure}
 HDFS exposes a filesystem namespace and allows user data to be stored in files and
-retrieved. Cluster structure is similar to the one of MapReduce cluster,
-with one master and multiple slaves, as we can see from \myFig{fig:hdfsNodeStruct}.
-The master is composed by a single Name Node (NN), that manages
+retrieved. Cluster are composed by one master and multiple slaves, as shown in \myFig{fig:hdfsNodeStruct}.
+The master provides a single Name Node (NN), that manages
 the file system namespace and regulates access to the files by clients.
-NN executes filesystem operations such as opening, closing, renaming
-files and directory, but the most important operation performed is
-keeping track of the mapping between blocks and Data Node (DN).
-Indeed a file stored in HDFS is split into one or more blocks, and those
-blocks are stored in the Data Node (DN). Data Node (DN) represent
-the slaves, they are usually one per node, and manage the storage that
-is attached to the node they are running on. They are responsible for
-serving read and write operation requests from the clients, but also
-can perform block creation, deletion and replication. Block replication
-is a significant way to improve fault tolerance.
+NN executes filesystem operations such as file open, close, rename, 
+and keeps track of the mapping between blocks and Data Node (DN). 
+File stored in HDFS are split into blocks, that are stored in the Data Node (DN). Data Node (DN) represent the slaves, and manage the storage attached to the node they are running on. They serve read and write operation requests from the clients, but also
+can perform block creation, deletion and replication. Block replication is a way to improve fault tolerance.
 
 \subsection{Batch Processing: Spark}\label{sec:spark}
-Apache Spark is an open source framework for distributed computation
-~\cite{misc:ApacheSpark}, that provides an interface for programming entire clusters
-with implicit data parallelism and fault tolerance. With respect to the MapReduce paradigm, the in-memory multilevel primitives of Spark allow to have performances up to 100 times better in certain applications. Spark can work as standalone or on a cluster manager such as Apache Hadoop Yarn or Apache Mesos. It also needs a distributed storage and can natively use HDFS and other solutions. 
+Apache Spark is an open source framework for distributed computation 
+~\cite{misc:ApacheSpark} provides an Application Programming Interface (API) that provides implicit data parallelism and fault tolerance. With respect to the MapReduce paradigm, the in-memory multilevel primitives of Spark allow to have up to 100 times better performance. Spark can run as standalone or on a cluster manager such as Apache Hadoop Yarn or Apache Mesos. It also needs a distributed storage and can natively use HDFS and other solutions. 
 
-Spark has been designed as a unified engine for distributed data processing. Its programming model resembles the one of MapReduce, but it is extended with a data sharing abstraction called Resilient Distributed Dataset (RDD). Using this abstraction, a wide range of processing workloads can be captured, including SQL, streaming, machine learning and graph processing. The generality of the Spark approach gives great benefits: firsty, applications are easier to develop since there is a unified API,  secondly, it is a lot easier to combine processing tasks. With previous distributed computation framework we needed to write data to mass storage before using them in another engine. Spark, instead, can reuse the same data, often kept in memory.
-The programming abstraction at the foundation of Spark is the Resilient Distributed Dataset (RDD), that is a fault-tolerant collection of objects partitioned across the cluster and can be processed in parallel. The users create RDD's by applying operations called "transformations", such as map, filter and group-by, on the data. RDD's can be
-backed by a file obtained from an external storage. Spark evaluates RDD's in a lazy mode. This allows the construction of an efficient plan to execute the computation requested by the user. In particular, every transformation operation returns a new RDD, that is the representation of the result of the computation, but the computation is not executed immediately after the transformation request is encountered, but only when a Spark action is met. When an "action" is requested by the user code, Spark checks the entire graph of the transformation and uses it to create an efficient execution plan. For example, if there are many filters and maps in a row, Spark can merge them together and execute as a single operation.
-RDDs also offer an explicit support to data sharing among the computations that are ephemeral by default, but can be persisted to disk or memory for rapid reuse. This data sharing is one of the main differences between Spark and the previous computing models
-like MapReduce, because all the other operations that Spark can perform are similar to the ones of MapReduce. The data sharing capability allows huge speedups, up to 100 times, in particular when executing interactive queries and iterative algorithms.
-RDDs can also recover automatically from a failure. Traditionally, fault tolerance in distributed computing was achieved by means of data replication and checkpointing. Spark instead uses a different approach called lineage. Each RDD keeps track of its transformation graph used to generate the RDD and re-executes the transformation operations on the base data to recover every lost partition. The data recovery based on lineage is significantly more efficient than replication in case of data-intensive workload. In general, recovering lost partitions is faster than re-executing the entire program. Spark was designed to support different external systems for persistent storage, usually it is used in conjunction with a clustered file system like HDFS. Spark is designed as a storage-system-agnostic engine, to make it easy to run computations against data from different sources.
+Spark was designed as a unified engine for distributed data processing. Its programming model extends the MapReduce with a data sharing abstraction called Resilient Distributed Dataset (RDD). This abstraction allows the processing many different workloads, including SQL, streaming, machine learning and graph processing. The generality of the Spark approach allows an easy development of applications through the use of its API, and an easy combination of  processing tasks. Previous distributed frameworks required data to be written to disk before using them in other processes. Spark allows the reuse of the data, often kept in memory.
+RDDs are fault-tolerant collections of objects partitioned across the cluster that can be processed in parallel. Users create RDDs by applying "transformation" operations like map, filter and group-by on the input data. RDDs can be backed by a file obtained from an external storage. RDD are evaluated in a lazy mode. This allows the construction of an efficient plan to execute the computation requested by the user. Every transformation operation returns a new RDD, that represents the result of the computation, however the computation is not executed immediately after the transformation request is encountered, but only when a Spark action is met. When an "action" is requested by the user code, Spark checks the entire graph of the transformation and uses it to create an efficient execution plan. For example, if there are many filters and maps in a row, Spark can merge them together and execute as a single operation.
+RDDs also offer an explicit support by default non-persistent data sharing among the computations. This capability is one of the main differences between Spark and the previous  models like MapReduce. Data sharing capability allows huge speedups, up to 100 times, in particular when executing interactive queries and iterative algorithms.
+RDDs can also recover automatically from a failure. Traditionally, fault tolerance in distributed computing was achieved by means of data replication and checkpointing. Spark instead uses a different approach called lineage. Each RDD keeps track of its transformation graph used to generate the RDD and re-executes the transformation operations on the base data to recover every lost partition. Data recovery based on lineage is significantly more efficient than replication in case of data-intensive workload. In general, recovering lost partitions is faster than re-executing the entire program. Spark was designed to support different external systems for persistent storage, usually it is used in conjunction with a clustered file system like HDFS. Spark is designed as a storage-system-agnostic engine, to make it easy to run computations against data from different sources.
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{Images/spark_standalone_architecture.pdf}  
@@ -132,9 +110,8 @@ the creation of programs that can run in Spark framework.
 	\item GraphX: graph computation interface
 	\item MLlib: machine learning library, more than 50 common algorithms for distributed model training
 \end{itemize}
-Spark architecture follows the master/worker paradigm (\myFig{fig:sparkStandaloneArchitecture}). A master server accepts data and processing request, split them into smaller chunk of data and simpler actions that can be handled
-in parallel by the multiple workers. A Spark application is executed inside a driver program, that makes the user code executable on the computing cluster using a SparkContext. The driver program is responsible for managing the job flow and scheduling tasks that will run on the executors. The SparkContext will split the requested operations in tasks the can be scheduled for distributed execution on
-the workers. When a SparkContext is created, a new Executor process is created on each worker. An executor is a separate Java Virtual Machine (JVM) that runs for the entire lifetime of the Spark application, executes tasks using a thread pool and store data for its Spark application. Communication between the SparkContext and the other
+Spark architecture implements the master/worker paradigm  (\myFig{fig:sparkStandaloneArchitecture}). A master server accepts data and processing request, split them into smaller chunks of data and simpler actions that can be executed 
+in parallel by the workers. A Spark application is executed by a driver program, that makes the user code executable on the computing cluster using a SparkContext. The driver program is responsible for managing the job flow and scheduling tasks that will run on the executors. The SparkContext will split the requested operations in tasks the can be scheduled for distributed execution on the workers. When a SparkContext is created, a new Executor process is created on each worker. An executor is a separate Java Virtual Machine (JVM) that runs for the entire lifetime of the Spark application, executes tasks using a thread pool and store data for its Spark application. Communication between the SparkContext and the other
 components is performed using a shared bus.
 \begin{figure}
 	\centering
@@ -142,11 +119,9 @@ components is performed using a shared bus.
 	\caption[Spark DAG Example]{Spark DAG Example.}
 	\label{fig:sparkDAGExample}
 \end{figure}
-When an application is submitted to Spark, it is divided in multiple jobs. Jobs are delimited by Spark actions in the application code. Spark actions are those operations that return a value to the driver program after running a computation on the dataset.
-For each job, a Directed Acyclic Graph (DAG) is created to keep track of the RDDs that are materialized inside the job. DAG nodes represent the RDDs, meanwhile arcs represent transformations, that are the operations that create new datasets from existing ones.
-The application steps inside a single job are further organized into stages, that are delimited by operations require data reshuffling, that will inevitably break locality.  Spark distinguishes between narrow transformations, that do not reshuffle data (e.g., map, filter), and wide transformations, that require data reshuffling (e.g., reduceByKey). Stages are also used to produce intermediate result that can be persisted
-to memory or mass storage to avoid re-computation. When all stages inside a job
-have been identified, Spark can determine which parallel tasks need to be executed for each stage, and schedule them for operation on the executors. Spark creates one task for each partition of the RDD received in input by a stage.
+When an application is submitted to Spark, it is divided in multiple jobs. Jobs are delimited by Spark actions in the application code. Spark actions are those operations that return a value to the driver program after running a computation on the data set.
+For each job, a Directed Acyclic Graph (DAG) is created to keep track of the RDDs that are materialized inside the job. DAG nodes represent the RDDs, while arcs represent transformations, that are the operations that create new datasets from existing ones.
+The application steps inside a single job are further organized into stages, that are delimited by operations requiring data reshuffling, that will break locality. Spark distinguishes between narrow transformations, that do not reshuffle data (e.g., map, filter), and wide transformations, that require data reshuffling (e.g., reduceByKey). Stages are also used to produce intermediate result that can be persisted to memory or mass storage to avoid re-computation. When all stages inside a job have been identified, Spark can determine which parallel tasks need to be executed for each stage, and schedule them for operation on the executors. Spark creates one task for each partition of the RDD received in input by a stage.
 
 \lstinputlisting[
 firstline=1,
@@ -163,9 +138,7 @@ captionpos=t,
 label=lst:wordCount
 ]{CodeFiles/wordCount.java}
 
-In \MyFig{fig:sparkDAGExample}, we can see a simple DAG representing the single job
-of the word count application presented in \MyListing{lst:wordCount} \cite{misc:SparkApplication}. The image was obtained from SparkWeb UI. Through a textFile operation, the input file is read from HDFS. Then a flatMap operation is applied to split each of the lines of the document into words. Following, another
-map is used to create (’word’, 1) pairs. Finally, a reduceByKey operation is performed  to count the occurrences of each word. The blue boxes represent the Spark operations that the user calls in his code, while the dots represent the RDDs that are created as a result of these operations. Operations are grouped into stages, represented by the boxes with a red border. The job has been divided into two stages because the reduceByKey transformation requires the data to be shuffled. The green dot represents a cached RDD, in particular the data read from HDFS has been cached, in this way future computations on this RDD can be done faster since data will be read from memory instead of HDFS. The default deployment of Spark is in standalone mode, that is using its embedded cluster manager. 
+\MyFig{fig:sparkDAGExample} shows a simple DAG representing the single job of the word count application presented in \MyListing{lst:wordCount} \cite{misc:SparkApplication}. The image is taken from SparkWeb UI. Through a textFile operation, the input file is read from HDFS. Then a flatMap operation is applied to split each of the lines of the document into words. Then, a map is used to create (’word’, 1) pairs. Finally, a reduceByKey operation is performed to count the occurrences of each word. The blue boxes represent the Spark operations that the user calls in his code, while the dots represent the RDDs that are created as a result of these operations. Operations are grouped into stages, represented by the boxes with a red border. The job has been divided into two stages because the reduceByKey transformation requires the data to be shuffled. The green dot represents a cached RDD, in particular the data read from HDFS has been cached, in this way future computations on this RDD can be done faster since data will be read from memory instead of HDFS. The default deployment of Spark is in standalone mode, that is using its embedded cluster manager. 
 
 \subsection{Streams Processing: Flink}\label{sec:flink}
 \begin{figure}
@@ -183,13 +156,13 @@ map is used to create (’word’, 1) pairs. Finally, a reduceByKey operation is
 
 Apache Flink~\cite{misc:ApacheFlink} is a framework and distributed processing engine for stateful computations over unbounded and bounded data streams. It can run in any commonly used cluster environments, computes at in-memory speed and manages data at any scale.
 
-Flink’s architecture is suitable for processing unbounded and bounded data. Any type of data is generated as a stream of events. Sensors data, server logs or user interactions on a website or mobile application, credit card transactions, all of these data are generated as streams of data.
+Flink’s architecture can process unbounded and bounded data. Sensors data, server logs or user interactions on a website or mobile application, credit card transactions, all of these data are generated as streams of data.
 
 Data can be processed as unbounded or bounded streams~\cite{misc:ApacheFlinkArchitecture}. 
 
-Unbounded streams have a start but no defined end. They do not terminate and provide data as it is generated. Unbounded streams must be continuously processed, i.e., events must be promptly handled after they have been ingested. It is not possible to wait for all input data to arrive because the input is unbounded and will not be complete at any point in time. Processing unbounded data often requires that events are ingested in a specific order, such as the order in which events occurred, to be able to reason about result completeness.
+Unbounded streams have a start but no defined end. They do not terminate and provide data as it is generated. Unbounded streams must be continuously processed, i.e., events must be managed  right after they have been read. It is not possible to wait for all input data to arrive because the input is unbounded and will not be complete at any point in time. Processing unbounded data often requires that events are processed in a specific order, such as the order in which events occurred, to be able to reason about result completeness.
 
-Bounded streams have a defined start and end. Bounded streams can be processed by ingesting all data before performing any computations. Ordered ingestion is not required to process bounded streams because a bounded data set can always be sorted. Processing of bounded streams is also known as batch processing.
+Bounded streams have a defined start and end. Bounded streams can be processed by reading all data before performing any computations. Ordered reading is not required to process bounded streams because a bounded data set can always be sorted. Processing of bounded streams is also known as batch processing.
 
 
 Apache Flink excels at processing unbounded and bounded data sets. Precise control of time and state enable Flink’s runtime to run any kind of application on unbounded streams. Bounded streams are internally processed by algorithms and data structures that are specifically designed for fixed sized data sets, yielding excellent performance.
@@ -213,7 +186,7 @@ Apache Storm~\cite{misc:ApacheStorm} is a free and open source distributed realt
 
 Storm has many use cases: realtime analytics, online machine learning, continuous computation, distributed RPC, ETL, and more. Storm is fast: a benchmark clocked it at over a million tuples processed per second per node. It is scalable, fault-tolerant, guarantees your data will be processed, and is easy to set up and operate.
 
-Storm integrates with the queueing and database technologies you already use. A Storm topology consumes streams of data and processes those streams in arbitrarily complex ways, repartitioning the streams between each stage of the computation however needed. 
+Storm integrates with the queueing and database technologies commonly used. A Storm topology consumes streams of data and processes those streams in arbitrarily complex ways, repartitioning the streams between each stage of the computation however needed. 
 
 The Apache Storm architecture is quite similar to that of Hadoop. However there are certain differences which can be better understood by getting a closer look at its cluster in \MyFig{fig:apache_storm}: 
 \textbf{Nodes} - There are two types of nodes in Storm cluster similar to Hadoop:
@@ -225,7 +198,8 @@ The Apache Storm architecture is quite similar to that of Hadoop. However there 
 
 \begin{itemize}
 	\item Topology – Storm Topology can be described as a network made of \textbf{spouts} and \textbf{bolts}. It can be compared to the Map and Reduce jobs of Hadoop. Spouts are the data stream source tasks and Bolts are the accrual processing tasks. Every node in the network consists of processing logic’s and links to demonstrate the ways in which data will pass and the processes will be executed. Each time a topology is submitted to the storm cluster, Nimbus consults the supervisor nodes about the worker nodes. 
-	\item Stream – One of the basic abstractions of the storm architecture is stream which is an unbounded pipeline of tuples. A tuple can be defined as the fundamental component in the Storm cluster containing a named list of the values or elements.  \item Spout – It is the entry point or the source of streams in the topology. It is responsible for getting in touch with the actual data source, receiving data continuously, transforming those data into actual stream of tuples and finally sending them to the bolts to be processed. two types of nodes in Storm cluster.
+	\item Stream – One of the basic abstractions of the storm architecture is stream which is an unbounded pipeline of tuples. A tuple can be defined as the fundamental component in the Storm cluster containing a named list of the values or elements.  
+	\item Spout – It is the entry point or the source of streams in the topology. It is responsible for getting in touch with the actual data source, receiving data continuously, transforming those data into actual stream of tuples and finally sending them to the bolts to be processed.
 	\item Bolt - Bolts keep the logic required for processing. These are responsible for emitting the streams for processing by other bolts and saving or sending the data for storage. These are capable of running functions, filtering tuples, aggregating and joining streams, linking with database, etc.
 \end{itemize}
 
@@ -307,7 +281,7 @@ An example of how \textit{speed} and \textit{precision} affect resource provisio
 
 
 \section{Spark Resource Provisioning}\label{sec:spark_resource_provisioning}
-It's important to remember that the cluster manager is responsible for starting executor processes and determine where and when they will run. Using Spark’s embedded cluster manager might be a problem in terms of resource utilization when we want to execute different distributed applications at the same time. Using a single cluster manager for different distributed applications has the advantage of providing a global view on which applications are running and which we want to execute inside the cluster.
+It's important to recall that the cluster manager is responsible for starting executor processes and determine where and when they will run. Using Spark’s embedded cluster manager might be a problem in terms of resource utilization when we want to execute different distributed applications at the same time. Using a single cluster manager for different distributed applications has the advantage of providing a global view on which applications are running and which we want to execute inside the cluster.
 Without a single cluster manager, we can have two main approaches
 in order to perform resource sharing and allocation:
 \begin{itemize}
