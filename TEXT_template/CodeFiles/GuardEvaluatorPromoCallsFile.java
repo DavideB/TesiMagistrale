@@ -137,6 +137,5 @@ public class GuardEvaluatorPromoCallsFile implements IGuardEvaluator {
 
         arg3_known = (knownValues.get("arg3") != null);
         arg3 = arg3_known ? Integer.parseInt((String) knownValues.get("arg3")) : null;
-
     }
 }

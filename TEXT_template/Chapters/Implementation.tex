@@ -218,9 +218,10 @@ caption={Interface class IGuardEvaluator.},
 captionpos=t,
 label=lst:IGuardEvaluator
 ]{CodeFiles/IGuardEvaluator.java}
+\vspace{1.5cm}
 \lstinputlisting[
 firstline=1,
-lastline=142,
+lastline=141,
 %float=thb,
 language=java,
 tabsize=2,
@@ -251,7 +252,7 @@ label=lst:DAGScheduler_GuardEvaluator
 ]{CodeFiles/DAGScheduler_GuardEvaluator.scala}
 
 \section{Symbol Store}\label{sec:symbol_store}
-In order to take advantage of the symbolic execution, we need to maintain an updated   \textit{Symbol Store} containing all the symbols that can be part of a path condition and their associated determinations (assigned values). We added the code into the xSpark class \texttt{DAGScheduler} to abstractely represent the \textit{Symbol Store} as a  \textit{HashMap[String, Any]}. Each entry of this HashMap stores a \textit{known symbol} name and its value. By \textit{known symbol} we mean a symbol that has been associated to a value during the concrete execution of program code. Given this defintion, at the very beginning of the computation the only known symbols are the runtime arguments passed to the application. We added to the xSpark class \texttt{DAGScheduler} the code to read the arguments and their values and create the corresponding \textit{Symbol Store} entries. The code is shown in \MyListing{lst:DAGScheduler_symbol_store}, where we can notice that the first two arguments loaded when var \textit{iter} is set to negative values ($-2\ and -1$) are respectively the \textit{GuardEvaluator} class name and the application jar name, that are not symbols. They are not kept in the Symbol Store, instead they are used to initialize the variables \texttt{guardEvalClassname} and \texttt{appJar} which will be needed in a later step of the execution to identify the location and dynamically load the class implementing the \textit{GuardEvaluator} function.
+In order to take advantage of the symbolic execution, we need to maintain an updated   \textit{Symbol Store} containing all the symbols that can be part of a path condition and their associated determinations (assigned values). We added the code into the xSpark class \texttt{DAGScheduler} to abstractely represent the \textit{Symbol Store} as a  \texttt{HashMap[String, Any]}. Each entry of this HashMap stores a \textit{known symbol} name and its value. By \textit{known symbol} we mean a symbol that has been associated to a value during the concrete execution of program code. Given this defintion, at the very beginning of the computation the only known symbols are the runtime arguments passed to the application. We added to the xSpark class \texttt{DAGScheduler} the code to read the arguments and their values and create the corresponding \textit{Symbol Store} entries. The code is shown in \MyListing{lst:DAGScheduler_symbol_store}, where we can notice that the first two arguments loaded when var \textit{iter} is set to negative values ($-2\ and -1$) are respectively the \textit{GuardEvaluator} class name and the application jar name, that are not symbols. They are not kept in the Symbol Store, instead they are used to initialize the variables \texttt{guardEvalClassname} and \texttt{appJar} which will be needed in a later step of the execution to identify the location and dynamically load the class implementing the \textit{GuardEvaluator} function.
 \lstinputlisting[
 firstline=1,
 lastline=17,
@@ -871,26 +872,26 @@ times to repeat the profiling for each experiment file (default is 1),
 %\end{verbatim}
 %where *numexecutors* is an integer specifying the maximum number of executors to be used in the experiments, *bpar* is a variable parameter representing num\_v for pagerank, num\_of\_points for kmeans, scale\_factor for sort\_by\_key, \emph{-r} or \emph{--num-runs} is the number of times the specified application is run, \emph{-p} or \emph{--num-partitions} is the number of partitions for each task, \emph{-P} or \emph{--profile} instructs xSpark to perform the profiling at the end of the experiments, \emph{-R} or \emph{--reuse-dataset} option instructs xSpark to reuse (do not delete) application data in hdfs master node.
 
-\hypertarget{log_profiling-command-syntax}{%
-\subparagraph{\texorpdfstring{\emph{log\_profiling} command
-		syntax:}{log\_profiling command syntax:}}\label{log_profiling-command-syntax}}
+%\hypertarget{log_profiling-command-syntax}{%
+%\subparagraph{\texorpdfstring{\emph{log\_profiling} command
+%		syntax:}{log\_profiling command syntax:}}\label{log_profiling-command-syntax}}
+%
+%\begin{verbatim}
+%log_profiling {[-L | --local]}
+%\end{verbatim}
 
-\begin{verbatim}
-log_profiling {[-L | --local]}
-\end{verbatim}
+%where \emph{-L} or \emph{--local} option instructs xSpark use default
+%local output folders.
 
-where \emph{-L} or \emph{--local} option instructs xSpark use default
-local output folders.
+%\hypertarget{time_analysis-command-syntax}{%
+%\subparagraph{\texorpdfstring{\emph{time\_analysis} command
+%		syntax:}{time\_analysis command syntax:}}\label{time_analysis-command-syntax}}
 
-\hypertarget{time_analysis-command-syntax}{%
-\subparagraph{\texorpdfstring{\emph{time\_analysis} command
-		syntax:}{time\_analysis command syntax:}}\label{time_analysis-command-syntax}}
+%\begin{verbatim}
+%time_analysis {[-i | --input-dir] *dir*}
+%\end{verbatim}
 
-\begin{verbatim}
-time_analysis {[-i | --input-dir] *dir*}
-\end{verbatim}
-
-where \emph{dir} is the directory where the log files are located.
+%where \emph{dir} is the directory where the log files are located.
 
 \hypertarget{example-profile-and-test-callsexample}{%
 \subsection{Example: Profile and Test
@@ -975,12 +976,14 @@ CallsExample_2.json:
 Run the Profiling with 5 iterations:
 
 \begin{verbatim}
-$ python3 xSpark\_dagsymb.py profile -r 5 CallsExample\_1.json CallsExample\_2.json
+$ python3 xSpark\_dagsymb.py profile -r 5 
+  CallsExample\_1.json CallsExample\_2.json
 \end{verbatim}
 
 Run the Application Test with 5 iterations:
 
 \begin{verbatim}
-$ python3 xSpark\_dagsymb.py submit  -r 5 CallsExample\_1.json CallsExample\_2.json
+$ python3 xSpark\_dagsymb.py submit  -r 5 
+  CallsExample\_1.json CallsExample\_2.json
 \end{verbatim}
 \end{enumerate}

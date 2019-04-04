@@ -51,10 +51,10 @@ The comparison of \tool with the original \cSpark version has been done, for eac
 \subsection{Results}
 Results produced by\tool for PromoCalls and Louvain tools, up to the profiling phase, are shown in Tables~\ref{Table:Check:Promo} and ~\ref{Table:Check;Louvain}. Column $Path$ lists the paths found by \dSymb: $8$ unique paths were discovered in both cases. 
 
-Column $Found?$ shows whether or not \dSymb succeeded in generating a test case (and thus a corresponding profiling launcher) for the identified paths: it was successful in generating test cases for all path of PromoCalls, instead it was able to identify 6 out of 8 possible paths of Louvain\footnote{The two paths of Louvain for which \dSymb was not successful in identifying a corresponding test case were manually inspected. In any case, the proof that either these paths are infeasible, or an input datasets can be identified that exercise these paths, is missing.}. As a matter of fact, we currently have no clue if Louvain can execute these program paths or not.)
+Column $Found$ shows whether or not \dSymb succeeded in generating a test case (and thus a corresponding profiling launcher) for the identified paths: it was successful in generating test cases for all path of PromoCalls, instead it was able to identify 6 out of 8 possible paths of Louvain\footnote{The two paths of Louvain for which \dSymb was not successful in identifying a corresponding test case were manually inspected. In any case, the proof that either these paths are infeasible, or an input datasets can be identified that exercise these paths, is missing.}. As a matter of fact, we currently have no clue if Louvain can execute these program paths or not.)
 
 Column $Jobs$ and column $Stages$ report  the number of jobs and stages collected when profiling the launchers with \cSpark, which range between 3 and 9 jobs, 3 and 9 stages for Promocalls, and 11 and 17 jobs, 73 and 364 stages for Louvain, respectively. These data are not available for the two paths of Louvain for which \dSymb did not generate a launcher.
-In both tables, we marked with $^\bullet$ and $^\dagger$ the paths that correspond to the best and worst case, respectively, of each application. 
+We marked with $^\bullet$ and $^\dagger$ the paths corresponding to the best and worst case, respectively, of each application in both tables. 
 
 \begin{table}[thbp]
 	\centering
@@ -63,9 +63,9 @@ In both tables, we marked with $^\bullet$ and $^\dagger$ the paths that correspo
 		%\hspace{0.1cm}
 		\begin{tabular}{c|c|c|c}
 			\toprule
-			\multicolumn{1}{c|}{\textbf{Path}} &  \multicolumn{1}{c|}{\textbf{Found?}}   & \multicolumn{1}{c|}{\boldmath$\#Jobs$}  &  \multicolumn{1}{c}{\boldmath$\#Stages$}    \\
+			\multicolumn{1}{c|}{\textbf{Path}} &  \multicolumn{1}{c|}{\textbf{Found}}   & \multicolumn{1}{c|}{\boldmath$\#Jobs$}  &  \multicolumn{1}{c}{\boldmath$\#Stages$}    \\
 			%\rotatebox{90}{\textbf{Path}} &  
-			%\rotatebox{90}{\textbf{Found?}}   & 
+			%\rotatebox{90}{\textbf{Found}}   & 
 			%\rotatebox{90}{\boldmath$\#Jobs$}  &  %\rotatebox{90}{\boldmath$\#Stages$}    \\
 			\midrule
 			$0$ & Yes  & 6 & 6  \\	
@@ -90,9 +90,9 @@ In both tables, we marked with $^\bullet$ and $^\dagger$ the paths that correspo
 		\hspace{0.5cm}
 		\begin{tabular}{c|c|c|c|c}
 			\toprule
-			\multicolumn{1}{c|}{\textbf{Path}} &  \multicolumn{1}{c|}{\textbf{Found?}}   & \multicolumn{1}{c|}{\boldmath$\#Jobs$}  &  \multicolumn{1}{c}{\boldmath$\#Stages$}    \\
+			\multicolumn{1}{c|}{\textbf{Path}} &  \multicolumn{1}{c|}{\textbf{Found}}   & \multicolumn{1}{c|}{\boldmath$\#Jobs$}  &  \multicolumn{1}{c}{\boldmath$\#Stages$}    \\
 			%\rotatebox{90}{\textbf{Path}} &  
-			%\rotatebox{90}{\textbf{Found?}}   & 
+			%\rotatebox{90}{\textbf{Found}}   & 
 			%\rotatebox{90}{\boldmath$\#Jobs$}  &  %\rotatebox{90}{\boldmath$\#Stages$}    \\
 			\midrule
 			$0$ & Yes  &  11 & 149 \\	
