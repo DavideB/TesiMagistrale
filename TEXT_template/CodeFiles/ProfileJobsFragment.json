@@ -1,0 +1,45 @@
+{
+    "0": {
+        "0": {
+            jobs": {
+                "0": {
+                    "id-symb": "count_PromoCalls.java:34_0",
+                    "stages": [
+                        0
+                    ]
+                },
+                "1": {
+                    "id-symb": "count_PromoCalls.java:42_0",
+                    "stages": [
+                        1
+                    ]
+                },
+                "2": {
+                    "id-symb": "count_PromoCalls.java:45_0",
+                    "stages": [
+                        2
+                    ]
+                },
+                "3": {
+                    "id-symb": "count_PromoCalls.java:51_0",
+                    "stages": [
+                        3
+                    ]
+                },
+                "4": {
+                    "id-symb": "count_PromoCalls.java:52_0",
+                    "stages": [
+                        4
+                    ]
+                },
+                "5": {
+                    "id-symb": "count_PromoCalls.java:68_0",
+                    "stages": [
+                        5
+                    ]
+                }
+            },
+           ...
+        },
+    ...
+}

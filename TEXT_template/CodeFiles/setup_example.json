@@ -1,0 +1,42 @@
+{
+	"Provider": "AZURE",
+    "VM": {
+		"Core": 16,
+		"Memory": "100g"
+		},
+    "ProcessOnServer": false,
+	"InstallPython3": false,
+	"Azure": {
+        "ResourceGroup": "xspark-davide",
+        "SecurityGroup": "cspark-securitygroup2",
+        "StorageAccount": {
+            "Sku": "standard_lrs",
+            "Kind": "storage",
+            "Name": "xsparkstoragedavide"
+        },
+        "Subnet": "default",
+        "NodeSize": "Standard_D14_v2_Promo",
+        "Network": "cspark-vnet2",
+        "Location": "centralus",
+        "NodeImage": {
+            "BlobContainer": "vhd",
+            "StorageAccount": "xsparkstoragedavide",
+            "Name": "vm3-os.vhd"
+        }
+    },
+    "Spark": {
+        "ExternalShuffle": "true",
+        "Home": "/opt/spark/",
+        "LocalityWaitRack": 0,
+        "CpuTask": 1,
+        "LocalityWaitProcess": 1,
+        "LocalityWait": 0,
+        "LocalityWaitNode": 0
+    },
+    "xSpark": {
+    	"Home": "/usr/local/spark/"
+	},
+	"SparkSeq": {
+    	"Home": "/opt/spark-seq/"
+	}
+}

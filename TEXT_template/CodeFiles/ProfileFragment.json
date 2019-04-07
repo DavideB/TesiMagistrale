@@ -1,19 +1,32 @@
-{ ...
-	"3": {
-			...
-			"cachedRDDs": [16, 9],
-			"duration": 504086,
-			"genstage": false,
-			"name": "mapPartitions at . . . ",
-			"nominalrate": 413525.2675138766,
-			"numtask": 1000,
-			"parentsIds ": [1, 2],
-			"recordsread": 1000,
-			" recordswrite": 0.0,
-			" shufflerecordsread": 208452298,
-			" shufflerecordswrite ": 1000000,
-			"skipped": false,
-			"weight": 4.97875957673889
-			...
-		},
-... }
+{
+    "0": {
+        "actual_records_read": 20000000.0,
+        "actual_records_write": 20000000.0,
+        "actualtotalduration": 186000.0,
+        "bytesread": 337777780.0,
+        "byteswrite": 0.0,
+        "cachedRDDs": [
+            5
+        ],
+        "duration": 11000.0,
+        "genstage": false,
+        "id": 0.0,
+        "io_factor": 1.0,
+        "monocoreduration": 381388.0,
+        "monocoretotalduration": 10127715.0,
+        "name": "mapPartitions at VertexRDD.scala:356",
+        "nominalrate": 52440.03482018312,
+        "nominalrate_bytes": 885653.9272342077,
+        "numtask": 500,
+        "parentsIds": [],
+        "recordsread": 20000000.0,
+        "recordswrite": 0.0,
+        "shufflebytesread": 0.0,
+        "shufflebyteswrite": 114175342.0,
+        "shufflerecordsread": 0.0,
+        "shufflerecordswrite": 20000000.0,
+        "skipped": false,
+        "t_record_ta_executor": 0.0190694,
+        "totalduration": 207000.0,
+        "weight": 28.777443181222274
+    }

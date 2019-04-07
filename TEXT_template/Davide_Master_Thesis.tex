@@ -35,7 +35,7 @@
 %    * See classicthesis-preamble.sty for useful commands
 % ****************************************************************
 
-\documentclass[ %twoside, 
+\documentclass[ twoside, 
 			openright,
 			% letterpaper a4paper
 			titlepage, 
@@ -52,7 +52,6 @@
 %*****************************************************************
 % Note: Make all your adjustments in here
 %*****************************************************************
-
 % \usepackage[backref, backend=biber]{biblatex}
 \usepackage{bibentry}
 \usepackage[backref,
@@ -102,6 +101,7 @@
 	\cleardoublepage\include{FrontBackmatter/AutoParts/Contents}
 	\cleardoublepage\include{FrontBackmatter/Abstract}
 	%\cleardoublepage\include{FrontBackmatter/Estratto}
+	\cleardoublepage\include{FrontBackmatter/Sommario}
 	%\cleardoublepage\include{FrontBackmatter/Introduction}
 	%\cleardoublepage\include{FrontBackmatter/Preface}
 
@@ -111,7 +111,7 @@
 	% Mainmatter
 
 	%*************************************************************
-	\pagenumbering{arabic}
+	\cleardoublepage\pagenumbering{arabic}
 	%\setcounter{page}{90}
 	% use \cleardoublepage here in case of problems with pdfbookmark
 

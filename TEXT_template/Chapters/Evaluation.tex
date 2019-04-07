@@ -9,19 +9,56 @@
 \lettrine[lines=4]{\textcolor{purple}{I}}{n} this chapter we describe the experiments we have performed to evaluate the feasibility and quality of the solution and to address the research questions identified in  \MySec{sec:solution_contribution}. The evaluation took place by using  \tool, which is the integration of \dSymb with \cSpark, to control the parallel execution of the Spark applications.
 
 \section{Test Environment}\label{sec:test_env}
-The test environment was built on Virtual Machines (from here onward VMs) of type   \textit{Standard\_D14\_v2}~\cite{AzureVMsizes}  provided by Microsoft Azure~\cite{AzureVM}, each of them equipped with $5$ CPUs, $112$ GiB of memory, $800$ GiB of local SSD memory and $6000$ Mbps of network bandwidth.
+The test environment was built on Virtual Machines (from here onward VMs) of type   \textit{Standard\_D14\_v2}~\cite{AzureVMsizes}  provided by Microsoft Azure~\cite{AzureVM}, each of them equipped with $16$ CPUs, $112$ GiB of memory, $800$ GiB of local SSD memory and $6000$ Mbps of network bandwidth.
 This type of VM is optimized for memory usage, with a high memory/core ratio. The os and software packages installed on these VMs are: Canonical Ubuntu Server 14.04.5-LTS~\cite{Ubuntu}, Oracle Java 8~\cite{Java8}, Apache Hadoop 2.7.2~\cite{Hadoop}, Apache Spark 2.0.2~\cite{Spark} and xSpark. All VM software is stored in a 200 GiB virtual hard drive maintained in the persistent layer of an Azure Blob Storage [24]. The VMs are organized in clusters composed of $5$ VMs running HDFS (storing the input datasets) and $5$ hosting Apache Spark and xSpark ($5$ for old \cSpark and $5$ for $\cSpark+\dSymb$). The Spark cluster runs Spark application either under Spark with the default configuration or under  $\cSpark+\dSymb$ or \cSpark with the configuration parameters shown in  \MyFig{fig:xSparkDagSymbConfigParms} or in \MyFig{fig:xSparkConfigParms} respectively.
-\begin{figure}[thbp]
-	\centering
-	\includegraphics[width=\columnwidth]{images/xspark_symex_control_unlimited_parms.pdf}
+
+\begin{figure}[t]
+\resizebox{.99\columnwidth}{!}{
+	\hspace{0.1cm}
+	\begin{minipage}{0.5\columnwidth}
+	%\centering
+	%\includegraphics[width=\columnwidth]{images/xspark_symex_control_unlimited_parms.pdf}
+	\lstinputlisting[
+	firstline=1,
+	lastline=12,	%float=tb,
+	language=Python,
+	tabsize=2,
+	basicstyle=\tiny,
+	numbers=left,
+	numberstyle=\tiny,
+	stepnumber=1,
+	numbersep=5pt,
+	caption=, nolol,
+	%captionpos=t,
+	%label=lst:label
+	]{CodeFiles/symexcontrol_unlimited.json}
 	\caption{control.json \tool configuration parameters.}
 	\label{fig:xSparkDagSymbConfigParms}
-\end{figure}
-\begin{figure}[thbp]
-	\centering
-	\includegraphics[width=\columnwidth]{images/xspark_control_unlimited_parms.pdf}
+	\end{minipage}
+%\end{figure}
+%\begin{figure}[thbp]
+	\hspace{0.5cm}
+	\begin{minipage}{0.5\columnwidth}
+		%\centering
+	%\includegraphics[width=\columnwidth]{images/xspark_control_unlimited_parms.pdf}
+	\lstinputlisting[
+	firstline=1,
+	lastline=12,	%float=tb,
+	language=Python,
+	tabsize=2,
+	basicstyle=\tiny,
+	numbers=left,
+	numberstyle=\tiny,
+	stepnumber=1,
+	numbersep=5pt,
+	caption=, nolol,
+	%captionpos=t,
+	%label=lst:label
+	]{CodeFiles/control_unlimited.json}
 	\caption{control.json \cSpark configuration parameters.}
 	\label{fig:xSparkConfigParms}
+	\end{minipage}
+}
 \end{figure}
 
 \section{Tested Applications}\label{sec:tested_apps}
@@ -51,14 +88,17 @@ The comparison of \tool with the original \cSpark version has been done, for eac
 \subsection{Results}
 Results produced by\tool for PromoCalls and Louvain tools, up to the profiling phase, are shown in Tables~\ref{Table:Check:Promo} and ~\ref{Table:Check;Louvain}. Column $Path$ lists the paths found by \dSymb: $8$ unique paths were discovered in both cases. 
 
-Column $Found$ shows whether or not \dSymb succeeded in generating a test case (and thus a corresponding profiling launcher) for the identified paths: it was successful in generating test cases for all path of PromoCalls, instead it was able to identify 6 out of 8 possible paths of Louvain\footnote{The two paths of Louvain for which \dSymb was not successful in identifying a corresponding test case were manually inspected. In any case, the proof that either these paths are infeasible, or an input datasets can be identified that exercise these paths, is missing.}. As a matter of fact, we currently have no clue if Louvain can execute these program paths or not.)
+Column $Found$ shows whether or not \dSymb succeeded in generating a test case (and thus a corresponding profiling launcher) for the identified paths: it was successful in generating test cases for all path of PromoCalls, instead it was able to identify 6 out of 8 possible paths of Louvain\footnote{The two paths of Louvain for which \dSymb was not successful in identifying a corresponding test case were manually inspected. In any case, the proof that either these paths are infeasible, or an input datasets can be identified that exercise these paths, is missing.}. As a matter of fact, we currently have no clue if Louvain can execute these program paths or not.
 
 Column $Jobs$ and column $Stages$ report  the number of jobs and stages collected when profiling the launchers with \cSpark, which range between 3 and 9 jobs, 3 and 9 stages for Promocalls, and 11 and 17 jobs, 73 and 364 stages for Louvain, respectively. These data are not available for the two paths of Louvain for which \dSymb did not generate a launcher.
 We marked with $^\bullet$ and $^\dagger$ the paths corresponding to the best and worst case, respectively, of each application in both tables. 
 
 \begin{table}[thbp]
-	\centering
-	\hspace{1cm}
+	\resizebox{0.98\textwidth}{!}{
+	\hspace{-0.2cm}
+	\begin{minipage}{0.5\columnwidth}
+	%\centering
+	%\hspace{1cm}
 	\parbox{.48\linewidth}{
 		%\hspace{0.1cm}
 		\begin{tabular}{c|c|c|c}
@@ -81,14 +121,17 @@ We marked with $^\bullet$ and $^\dagger$ the paths corresponding to the best and
 		\caption{\boldmath$PromoCalls$ paths.}
 		\label{Table:Check:Promo}
 	}
+	\end{minipage}
+	\hspace{0.7cm}
 %\end{table}
 %\begin{table}[thbp]
-	\centering
+	\begin{minipage}{0.50\columnwidth}
+	%\centering
 	\parbox{.48\linewidth}{
 		%	\vspace{0.78cm}
-		\vspace{2cm}
-		\hspace{0.5cm}
-		\begin{tabular}{c|c|c|c|c}
+		%\vspace{2cm}
+		%\hspace{0.5cm}
+		\begin{tabular}{c|c|c|c}
 			\toprule
 			\multicolumn{1}{c|}{\textbf{Path}} &  \multicolumn{1}{c|}{\textbf{Found}}   & \multicolumn{1}{c|}{\boldmath$\#Jobs$}  &  \multicolumn{1}{c}{\boldmath$\#Stages$}    \\
 			%\rotatebox{90}{\textbf{Path}} &  
@@ -108,7 +151,8 @@ We marked with $^\bullet$ and $^\dagger$ the paths corresponding to the best and
 		\caption{\boldmath$Louvain$ paths.}
 		\label{Table:Check;Louvain}
 	}
-	
+	\end{minipage}
+}
 \end{table}
 \begin{table}[tbhp]
 	\centering
@@ -202,7 +246,7 @@ The effectiveness of \tool to control the execution of the tested applications, 
 For each profiled path $P_i$, column $Experiment$ indicates the data obtained with \tool ($xSpark_s$), and \cSpark configured with the worst-case dataset ($xSpark_w$) and with the best-case dataset ($xSpark_b$), respectively. 
 In column $deadline$ we show the set deadline in seconds. 
 In column $exec\_time$ the actual execution time of the application is reported in seconds, as the average of $5$ iterations of the experiments (for a total of $120$ executions of PromoCalls (8 paths $\times$ 5 repetitions $\times$ 3 modes) and $90$ executions of Louvain). 
-In column $violation$ we show the deadline violations (i.e., $exec_time > deadline$). 
+In column $violation$ we show the deadline violations (i.e., $exec\_time > deadline$). 
 The error  is quantified in column $error$, defined as:
 %
 \[

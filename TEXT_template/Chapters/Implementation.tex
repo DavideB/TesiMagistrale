@@ -84,15 +84,41 @@ The profiling information for a \tool application is obtained by combining the J
 	\caption{Structure of profile JumboJSON. Each profile is identified by its profile id's {"$0$", "$1$", ...,"$7$"} and, in general, is characterized by its own number of stages and key values. Left and right images show the same JumboJSON profile where profile "$0$" (left) and profile "$1$" (right) are expanded, to show their difference in terms of number of stages ($6$ stages for profile $0$ and $3$ for profile $1$ ) and totalduration ($76,200$ ms for profile $0$ ms and  $43,000$ ms for profile $1$).}
 	\label{fig:jumboJSON_structure}
 \end{figure}
-Furthermore, each single json profile is enhanced with information about the jobs composing the application, as shown in \MyFig{fig:profile_jobs_info}. 
-\begin{figure}[tbhp]
-	%\vspace*{-1cm}
-	\hspace*{-1.7cm}
+Furthermore, each single json profile is enhanced with information about the jobs composing the application, as shown in \MyFig{fig:profile_jobs_info}.
+
+\begin{figure}[t]
+	%\vspace{-0.5cm}
 	\centering
-	\includegraphics[width=15cm]{images/xsparksymb_profile_jobs_info}
-	\caption{Information about jobs in json DAG profile.}
-	\label{fig:profile_jobs_info}
+	%\includegraphics[width=12cm]{images/xsparksymb_profile_jobs_info}
+	\begin{minipage}{0,65\columnwidth}
+		\lstinputlisting[
+		firstline=1,
+		lastline=45,		%float=tb,
+		language=Python,
+		tabsize=2,
+		basicstyle=\tiny,
+		numbers=left,
+		numberstyle=\tiny,
+		stepnumber=1,
+		numbersep=5pt,
+		caption=, nolol,
+		%captionpos=t,
+		%label=lst:profileFragment
+		]{CodeFiles/profileJobsFragment.json}  
+		\caption{Information about jobs in json DAG profile.}
+		\label{fig:profile_jobs_info}
+	\end{minipage}
 \end{figure}
+ 
+%\begin{figure}[t]
+%	\vspace{-0.5cm}
+%	%\hspace{-1.7cm}
+%	\centering
+%	\includegraphics[width=12cm]{images/xsparksymb_profile_jobs_info}
+%	\caption{Information about jobs in json DAG profile.}
+%	\label{fig:profile_jobs_info}
+%\end{figure}
+
 Inside \tool is kept a symbolic memory store that maps symbolic values (or symbols) to actual values. To this structure, initially empty, a new entry is added every time a symbolic value gets assigned a concrete value. Each entry is a key-value pair containing the symbol as key and the assigned value as value. The convention adopted for naming the symbols is the following:
 \begin{itemize}
 	\item \textbf{Commandline arguments}: prefix “arg\_” followed by an integer reflecting the position of the argument on the commandline. For example: “arg\_0”, “arg\_1” etc…
@@ -114,6 +140,7 @@ Inside \tool is kept a symbolic memory store that maps symbolic values (or symbo
 	\end{tabular}
 \end{table}
 \MyTab{Table:impl_symbolic_memory_store_contents} shows an example of symbolic memory store contents during the execution of the application, run with three commandline arguments having value “100”, “200”, “300” and two Spark actions already executed, of which the second was executed twice.
+
 The application is also required to implement the \textit{GuardEvaluator} functionality (explained in ~\MySec{sec:guard_evaluator}) by providing a \textit{Java} class implementing a method called \texttt{evaluateGuards} that receives in input a Map of a symbolic memory store (as the one described above) and returns a list of the profile id’s whose \plans are still executable (i.e. they contain execution paths whose Path Conditions are satisfiable).
 
 \subsection{A new Heuristic}\label{sec:new_heuristic}
@@ -151,7 +178,7 @@ As explained in ~\MyChap{chap:ProblemAndSolution}, the application parameters ca
 \lstinputlisting[
 firstline=1,
 lastline=13,
-%float=thb,
+float=thb,
 language=scala,
 tabsize=2,
 numbers=left,
@@ -166,11 +193,10 @@ label=lst:SparkSubmit_submit
 \section{Application Profiling}\label{sec:application_profiling}
 As shown in \MyFig{fig:xsparkdagsymb}, for each set of input parameters identified by \dSymb a \textit{Launcher} is generated. A \textit{Launcher} is a Java class which contains the command to run the application with a specific set of arguments, which is in a 1:1 relationship with the application parameters of the corresponding \plan. An example of Launcher class is shown in \MyListing{lst:LauncherExample}. 
 
-A \textit{Profiling} (see \MyFig{fig:xSparkExecFlow}
-) of the application is done by running it with each \textit{Launcher}'s set of arguments. Each profiling run generates the corresponding \plan in a specialized JSON file. At the end of this process, all the generated \plans are packaged into another JSON file, in jargon called \textit{JumboJSON}, to form the \model. All the generated JSON files are then stored along with the \model in the \textit{\model{ Store}} on the \textit{Spark Master} server. 
+A \textit{Profiling} (see \MyFig{fig:xSparkExecFlow}) of the application is done by running it with each \textit{Launcher}'s set of arguments. Each profiling run generates the corresponding \plan in a specialized JSON file. At the end of this process, all the generated \plans are packaged into another JSON file, in jargon called \textit{JumboJSON}, to form the \model. All the generated JSON files are then stored along with the \model in the \textit{\model{ Store}} on the \textit{Spark Master} server. 
 \lstinputlisting[
 firstline=1,
-lastline=42,
+lastline=33,
 %float=thb,
 language=java,
 tabsize=2,
@@ -190,7 +216,7 @@ The previous version of xSpark required a single \plan to be present in the \tex
 \lstinputlisting[
 firstline=1,
 lastline=10,
-%float=thb,
+float=thb,
 language=scala,
 tabsize=2,
 numbers=left,
@@ -204,10 +230,11 @@ label=lst:DAGScheduler-profile
 
 \section{GuardEvaluator}\label{sec:guard_evaluator}
 With the term \textit{GuardEvaluator} we collectively refer to the interface class \texttt{IGuardEvaluator} and its implementation class defining the \texttt{evaluateGuards} method, that is in charge of returning the list of valid profiles (\plans) when it is called with the HashMap of the known symbols and their values. The code of the  \texttt{IGuardEvaluator} interface is shown in \MyListing{lst:IGuardEvaluator}, while \MyListing{lst:GuardEvaluatorPromoCallsFile} shows an example of an implementation class and its method \texttt{evaluateGuards} for a specific application.
+\vspace{-1.5cm}
 \lstinputlisting[
 firstline=1,
 lastline=9,
-%float=thb,
+float=t,
 language=java,
 tabsize=2,
 numbers=left,
@@ -221,7 +248,7 @@ label=lst:IGuardEvaluator
 \vspace{1.5cm}
 \lstinputlisting[
 firstline=1,
-lastline=141,
+lastline=119,
 %float=thb,
 language=java,
 tabsize=2,
@@ -239,7 +266,7 @@ The application is in charge of providing the \textit{GuardEvaluator} as a java 
 \lstinputlisting[
 firstline=1,
 lastline=22,
-%float=thb,
+float=thb,
 language=scala,
 tabsize=2,
 numbers=left,
@@ -256,7 +283,7 @@ In order to take advantage of the symbolic execution, we need to maintain an upd
 \lstinputlisting[
 firstline=1,
 lastline=17,
-%float=thb,
+float=thb,
 language=scala,
 tabsize=2,
 numbers=left,
@@ -294,7 +321,7 @@ label=lst:ControlEventListener_heuristic
 \lstinputlisting[
 firstline=1,
 lastline=27,
-%float=thb,
+float=thb,
 language=scala,
 tabsize=2,
 numbers=left,
@@ -319,7 +346,7 @@ numbers=left,
 numberstyle=\tiny,
 stepnumber=1,
 numbersep=5pt,
-caption={Changes to companion object case class SparkStageWeightSubmitted of class SparkListener.scala}, 
+caption={Changes to case class SparkStageWeightSubmitted of class SparkListener.scala}, 
 captionpos=t,
 label=lst:SparkListener_SparkStageWeightSubmitted
 ]{CodeFiles/SparkListener_SparkStageWeightSubmitted.scala}
@@ -327,7 +354,7 @@ label=lst:SparkListener_SparkStageWeightSubmitted
 \lstinputlisting[
 firstline=1,
 lastline=40,
-%float=thb,
+%float=thbp,
 language=scala,
 tabsize=2,
 numbers=left,
@@ -355,18 +382,22 @@ label=lst:ControlEventListener_onStageWeightSubmitted
 ]{CodeFiles/ControlEventListener_onStageWeightSubmitted.scala}
 
 \paragraph{Stage Cardinality Mismatch Adjustment}
-As it will be presented in \MyChap{chap:Evaluation} dedicated to the evaluation of the solution, we have to be able to run the applications under xSpark configured to use heuristic \texttt{HeuristicControlUnlimited} and providing a single \plan corresponding to the \textbf\textit{best case} (i.e. lowest number of stages) and the \textbf\textit{worst case} (i.e. highest number of stages). These test settings are necessary to compare the performance of xSpark with and without \textit{Symbolic Execution} capabilities, however this situation leads  to the problem that we call \textit{Stage Cardinality Mismatch}. It happens when the number of stages of the application does not match the number of stages in the \plan. We can have two cases: the \plan contains more stages than the application or, vice-versa, the \plan contains less stages than the application. In the former case there are no problems, and  xSpark terminates correctly the execution of the application, while in the latter case xSpark tries to  retrieve information from the \plan about a non-existant stage and it terminates the execution of the application in error. To avoid this unwanted situation, we have changed the code in method \texttt{submitMissingTasks} of class \texttt{DAGScheduler.scala} shown in \MyListing{lst:DAGScheduler_submitMissingTasks}, where we added the variable \texttt{highestStageIdInProfile} that is initialized with the cardinality of the stages in the \plan and its value assigned to the variable \texttt{stageId} if the \texttt{id} of the requested stage is higher than \texttt{highestStageIdInProfile}. This creates the effect called \textit{stage id extension} depicted in \MyFig{fig:stage_id_extension}
-\begin{figure}[tbhp]
+As it will be presented in \MyChap{chap:Evaluation} dedicated to the evaluation of the solution, we have to be able to run the applications under xSpark configured to use heuristic \texttt{HeuristicControlUnlimited} and providing a single \plan corresponding to the \textbf\textit{best case} (i.e. lowest number of stages) and the \textbf\textit{worst case} (i.e. highest number of stages). These test settings are necessary to compare the performance of xSpark with and without \textit{Symbolic Execution} capabilities, however this situation leads  to the problem that we call \textit{Stage Cardinality Mismatch}. It happens when the number of stages of the application does not match the number of stages in the \plan. We can have two cases: the \plan contains more stages than the application or, vice-versa, the \plan contains less stages than the application. In the former case there are no problems, and  xSpark terminates correctly the execution of the application, while in the latter case xSpark tries to  retrieve information from the \plan about a non-existant stage and it terminates the execution of the application in error. To avoid this unwanted situation, we have changed the code in method \texttt{submitMissingTasks} of class \texttt{DAGScheduler.scala} shown in \MyListing{lst:DAGScheduler_submitMissingTasks}, where we added the variable \texttt{highestStageIdInProfile} that is initialized with the cardinality of the stages in the \plan and its value assigned to the variable \texttt{stageId} if the \texttt{id} of the requested stage is higher than \texttt{highestStageIdInProfile}. This creates the effect called \textit{stage id extension} depicted in \MyFig{fig:stage_id_extension}.
+\begin{figure}[t]
+	\vspace{-1.5cm}
 	%\hspace*{-4cm}
 	\centering
 	\includegraphics[width=\columnwidth]{images/stage_cardinality_mismatch_ok.pdf}
+	\vspace{-2.5cm}
 	\caption{Stage Cardinality Mismatch - Acceptable situation.}
 	\label{fig:stage_cardinality_mismatch_ok}
 \end{figure}
 \begin{figure}[tbhp]
 	%\hspace*{-4cm}
+	\vspace{-1cm}
 	\centering
 	\includegraphics[width=\columnwidth]{images/stage_id_extension.pdf}
+	\vspace{-2.5cm}
 	\caption{Stage Cardinality Mismatch - stage id extension.}
 	\label{fig:stage_id_extension}
 \end{figure}
@@ -424,6 +455,7 @@ caption={Changes to class DAGScheduler.scala - new  method resultComputed.},
 captionpos=t,
 label=lst:DAGScheduler_resultComputed
 ]{CodeFiles/DAGScheduler_resultComputed.scala}
+\vspace{1cm}
 \lstinputlisting[
 firstline=1,
 lastline=3,
@@ -438,10 +470,11 @@ caption={Changes to class SparkContext.scala - new method resultComputed.},
 captionpos=t,
 label=lst:SparkContext_resultComputed
 ]{CodeFiles/SparkContext_resultComputed.scala}
+\vspace{1cm}
 \lstinputlisting[
 firstline=1,
 lastline=37,
-%float=thb,
+%float=thbp,
 language=scala,
 tabsize=2,
 numbers=left,
@@ -455,7 +488,7 @@ label=lst:RDD_actions
 
 %\section{Running Jobs}\label{sec:running_jobs}
 \section{Intercepting Actions Results}\label{sec:running_jobs}
-Jobs in xSpark are delimited by \textit{actions} (e.g. \textit{count(), collect()  etc...)} and are composed by a number of stages, that reflect the \textit{transformations} operated on data. Data are abstracted by Resilient Distributed Datasets (\textit{RDD's} classes, which contains specialized methods implementing the actions that are in charge of calling the method \texttt{runJob} of  the \texttt{SparkContext} instance \texttt{sc}. 
+Jobs in xSpark are delimited by \textit{actions} (e.g. \textit{count(), collect()  etc...)} and are composed by a number of stages, that reflect the \textit{transformations} operated on data. Data are abstracted by Resilient Distributed Datasets (\textit{RDD}s) classes, which contains specialized methods implementing the actions that are in charge of calling the method \texttt{runJob} of  the \texttt{SparkContext} instance \texttt{sc}. 
 %As explained in ~\MySec{sec:application_parameters}, the application parameters are associated with symbols and can be part of a path condition, as can the results of the Spark \textit{actions}. 
 As we have seen in~\MySec{sec:symbols}, the result of a Spark \textit{action} is associated to a symbol through its \textit{CallSite}. Hence, we have changed the code of the methods implementing the \textit{actions} in the xSpark class \texttt{RDD} to store the result of the action in the local variable \texttt{res}, which is passed as a parameter in the call to the \texttt{resultComputed} method of the active \texttt{SparkContext} instance \texttt{sc}. The process to update the \tool \textit{Symbol Store} with the result of the action, which is associated to a unique symbol, is explained in  \MySec{sec:symbols}.  
 
@@ -463,7 +496,7 @@ As we have seen in~\MySec{sec:symbols}, the result of a Spark \textit{action} is
 
 \section{Python Tool}\label{sec:xspark_dagsymb}
 
-\textbf\textit{xSpark-dagsymb} is the name of the Python tool, which is part of the \tool solution that exploits symbolic execution techniques to safely run multi-dag applications in xSpark~\footnote{\url{https://github.com/gioenn/xSpark-dagsymb.git}}.
+\textbf{\textit{xSpark-dagsymb}} is the name of the Python tool, which is part of the \tool solution that exploits symbolic execution techniques to safely run multi-dag applications in xSpark~\footnote{\url{https://github.com/gioenn/xSpark-dagsymb.git}}.
 It combines two distinct functionalities, application profiling and
 application execution, which are part of \tool application lifecycle, in one integrated tool.
 
@@ -487,9 +520,7 @@ module receives as input the instances on which to configure the cluster
 be executed and waits for the applications to complete. The module
 \textbf{log.py} downloads and saves the logs created by the applications
 run. The \textbf{plot.py} and \textbf{metrics.py} modules respectively
-generate graphs and calculate metrics. The
-\textbf{process\_on\_server.py} module can be called to remotely execute
-the log analysis, graphs generation and metrics calculation on the
+generate charts and calculate metrics. The \textbf{process\_on\_server.py} module can be called to remotely execute the log analysis, charts generation and metrics calculation on the
 xSpark master server, and download the results to the client. This
 option is very useful to speed-up the processing especially in case of
 sizeable logfiles.
@@ -499,8 +530,8 @@ sizeable logfiles.
 	Configuration}\label{cloud-environment-configuration}}
 
 The Cloud environment must be properly initialized in order to allow
-\textbf{xSpark\_dagsymb} to access and modify resources in the cloud.
-We will present the procedure to setup the cloud environment on Microsoft Azure~\cite{Azure};
+\textbf{\textit{xSpark-dagsymb}} to access and modify resources in the cloud.
+We will present the procedure to setup the cloud environment on Microsoft Azure~\cite{Azure}:
 
 \hypertarget{azure}{%
 \subparagraph{Azure}\label{azure}}
@@ -532,7 +563,7 @@ described in the next paragraph.
 
 The \textbf{configure.py} module contains the Config class (shown in \MyListing{lst:configure.py}) used to instantiate configuration objects that are initialized with default values. The \textbf{credentials.json} file, shown in \MyFig{fig:xspark_dagsymb_credentials_template}, contains \emph{Amazon EC2}
 and/or \emph{Microsoft Azure} credential information. The
-\textbf{setup.json} contains Cloud environment and \emph{Amazon EC2}
+\textbf{setup.json} contains cloud environment and \emph{Amazon EC2}
 and/or \emph{Microsoft Azure} image parameters. The
 \textbf{control.json} file contains xSpark controller configuration
 parameters. Information in the \textbf{credentials.json},
@@ -555,15 +586,41 @@ label=lst:configure.py
 ]{CodeFiles/configure.py}
 %\begin{itemize}
 %\item
-AWS and/or MS-Azure Credentials: Open the
-\emph{credentials\_template.json} file and add the credentials for \textbf{xSpark\_dagsymb} (see instructions below to retrieve missing
+\textbf{\textit{AWS and/or MS-Azure Credentials}}: Open the
+\emph{credentials\_template.json} file and add the credentials for \textbf{\textit{xSpark-dagsymb}} (see instructions below to retrieve missing
 credentials):
 \begin{figure}[thbp]
+	%\vspace{-0.5cm}
 	\centering
-	\includegraphics[width=\columnwidth]{images/xspark_dagsymb_credentials_template.pdf}
+	%\includegraphics[width=0.75\columnwidth]{images/xspark_dagsymb_credentials_template.pdf}
+	\begin{minipage}{0,65\columnwidth}
+		\lstinputlisting[
+		firstline=1,
+		lastline=11,	%float=tb,
+		language=Python,
+		tabsize=2,
+		basicstyle=\small,
+		numbers=left,
+		numberstyle=\tiny,
+		stepnumber=1,
+		numbersep=5pt,
+		caption=, nolol,
+		%captionpos=t,
+		%label=lst:codefilecredentialstemplate
+		]{CodeFiles/credentials_template.json}  
+	\end{minipage}
 	\caption{Credential template file.}
 	\label{fig:xspark_dagsymb_credentials_template}
 \end{figure}
+
+%\begin{figure}[thbp]
+%	\vspace{-0.5cm}
+%	\centering
+%	\includegraphics[width=0.75\columnwidth]{images/xspark_dagsymb_credentials_template.pdf}
+%	\vspace{-0.5cm}
+%	\caption{Credential template file.}
+%	\label{fig:xspark_dagsymb_credentials_template}
+%\end{figure}
 %\{ ``AzTenantId'': ``\textless{} AZ-TENANT-ID \textgreater{}'',
 %``AzSubscriptionId'': ``\textless{} AZ-SUBSCRIPTION-ID
 %\textgreater{}'', ``AzApplicationId'': ``\textless{} AZ-APP-ID
@@ -594,7 +651,7 @@ Note, we have launched a browser for you to login. For old
 experience with device code, use "az login --use-device-code"
 \end{verbatim}
 
-a browser authentication windows is open to allow you to login to the
+A browser authentication windows is open to allow you to login to the
 Azure portal. If login is successful, you should get an output similar
 to the following:
 
@@ -638,25 +695,55 @@ Setup the xSpark and the Virtual Machine Cloud environment: edit the
 setup.json file to set the values to your need. An
 example using Microsoft Azure VM Cloud Service is shown in \MyFig{fig:xspark_dagsymb_setup}.
 
-\begin{figure}[thbp]
-	\hspace*{-2.5cm}
+\begin{figure}[t]
+	\vspace{0.5cm}
 	\centering
-	\includegraphics[width=18cm]{images/xspark_dagsymb_setup.pdf}
-	\caption{Example - setup.py file.}
-	\label{fig:xspark_dagsymb_setup}
+	%\includegraphics[width=12.5cm]{images/xspark_dagsymb_setup.pdf}
+	\begin{minipage}{0,65\columnwidth}
+		\lstinputlisting[
+		firstline=1,
+		lastline=42,	%float=tb,
+		language=Python,
+		tabsize=2,
+		basicstyle=\tiny,
+		numbers=left,
+		numberstyle=\tiny,
+		stepnumber=1,
+		numbersep=5pt,
+		caption=, nolol,
+		%captionpos=t,
+		%label=lst:label
+		]{CodeFiles/setup_example.json}
+		\vspace{0.5cm}  
+		\caption{Example - setup.py file.}
+		\label{fig:xspark_dagsymb_setup}
+	\end{minipage}
 \end{figure}
+\vspace{0.5cm}  
+%\begin{figure}[t]
+%	\vspace{-0cm}
+%	%\hspace*{-2.5cm}
+%	\centering
+%	\includegraphics[width=12.5cm]{images/xspark_dagsymb_setup.pdf}
+%	\caption{Example - setup.py file.}
+%	\label{fig:xspark_dagsymb_setup}
+%\end{figure}
 
 
 \hypertarget{application-profiling}{%
 \subsection{Application Profiling: PEP and PEP* generation}\label{application-profiling}}
 Profiling is the first logical phase of the \tool application
-lifecycle.  \tool allows to obtain the \model of an application. This can be obtained by launching the profiling command \textbf{profile\_symex} followed by the list of experiment files initialized with the input data set identified by the \dSymb \textit{launchers} and specifying the number $n$ of iterations the single experiment should be repeated. In profiling mode, experiments are run using the ``vanilla'' Spark version. Then the \textbf{processing.py} module is called to analyze the logs and create the ``application profile'', that is a JSON
-file containing the annotated DAG (\plan) of the executed stages plus additional information intended to be used by the controller in the execution phase. For each experiment the  \textbf{average\_runs.py} module is called to create a JSON profile called  <\emph{appname}>.json containing the average values of the $n$ \plans obtained by iterating the 
-profiling $n$ times. When all the experiments have produced their averaged \plan, a JSON file also called \textit{JumboJSON} containing the \model is created by collecting the averaged \plans. Finally, the \model file and all the \plans are uploaded to the xSpark configuration directory of the xSpark master server. For example, the command
+lifecycle.  \tool allows to obtain the \model of an application. This can be obtained by launching the profiling command \textbf{profile\_symex} followed by the list of experiment files initialized with the input data set identified by the \dSymb \textit{launchers} and specifying the number $n$ of iterations the single experiment should be repeated. 
+
+In profiling mode, experiments are run using the ``vanilla'' Spark version. Then the \textbf{processing.py} module is called to analyze the logs and create the ``application profile'', that is a JSON file containing the annotated DAG (\plan) of the executed stages plus additional information intended to be used by the controller in the execution phase.
+
+For each experiment the  \textbf{average\_runs.py} module is called to create a JSON profile called  <\emph{appname}>.json containing the average values of the $n$ \plans obtained by iterating the profiling $n$ times. 
+
+When all the experiments have produced their averaged \plan, a JSON file also called \textit{JumboJSON} containing the \model is created by collecting the averaged \plans. Finally, the \model file and all the \plans are uploaded to the xSpark configuration directory of the xSpark master server. For example, the command
 \begin{verbatim} 
-$ python3 xSpark\_dagsymb profile\_symex -r 5
-  exp\_Louvain\_1.json exp\_Louvain\_2.json 
-  exp\_Louvain\_3.json 
+$ python3 xSpark_dagsymb profile_symex -r 5
+  exp_Louvain_1.json exp_Louvain_2.json 
+  exp_Louvain_3.json 
 \end{verbatim}
 runs the profiling of application Louvain using launchers data sets 1, 2 and 3 and generating PEP files Louvain\_1.json, Louvain\_2.json, Louvain\_3.json and \model file Louvain.json.
 
@@ -670,7 +757,7 @@ parameters are inserted into a JSON format ``experiment files'' and passed as co
 arguments to the \emph{\textbf{submit\_symex}} command. As an example, an
 experiment files for CallsExample and one for Louvain are shown here below:
 
-
+\vspace{1cm}
 \begin{verbatim}
 CallsExample experiment file example:
 {
@@ -726,30 +813,38 @@ Louvain experiment file example:
    }
 }
 \end{verbatim}
-Many files are downloaded from the xSpark Master and Slaves containing application log information and system resources utilization, that are processed to create resource utilization reports and statistics and a series of charts about the application progress, the worker progress, including application and stages deadlines, actual execution times and cpu utilization. One of the features that was added by this work is the creation of Matlab interactive and zoomable charts that allow an accurate evaluation of the details of the data shown on the charts. Examples of Matlab charts, contained in the Matlb executable file \texttt{charts.m} are shown in \MyFig{fig:plot_app}, \MyFig{fig:plot_app_zoom},\MyFig{fig:plot_worker},\MyFig{fig:plot_worker_zoom}
-\begin{figure}[thbp]
-	\centering
+Many files are downloaded from the xSpark Master and Slaves containing application log information and system resources utilization, that are processed to create resource utilization reports and statistics and a series of charts about the application progress, the worker progress, including application and stages deadlines, actual execution times and cpu utilization. One of the features that was added by this work is the creation of Matlab interactive and zoomable charts that allow an accurate evaluation of the details of the data shown on the charts. Examples of Matlab charts, contained in the Matlb executable file \texttt{charts.m} are shown in \MyFig{fig:plot_app}, \MyFig{fig:plot_app_zoom}, \MyFig{fig:plot_worker},\MyFig{fig:plot_worker_zoom}
+\begin{figure}[t]
+	%\centering
+\begin{minipage}{0.5\columnwidth}
 	\includegraphics[width=\columnwidth]{images/plot_app.pdf}
 	\caption{Example - Application Matlab Chart.}
 	\label{fig:plot_app}
-\end{figure}
-\begin{figure}[thbp]
-	\centering
+\end{minipage}
+%\end{figure}
+%\begin{figure}[thbp]
+	%\centering
+\begin{minipage}{0.5\columnwidth}
 	\includegraphics[width=\columnwidth]{images/plot_app_zoom.pdf}
-	\caption{Example - Zoomed Details Application Matlab Chart.}
+	\caption{Example - Zoomed Application Matlab Chart.}
 	\label{fig:plot_app_zoom}
-\end{figure}
-\begin{figure}[thbp]
-	\centering
-	\includegraphics[width=\columnwidth]{images/plot_worker.pdf}
-	\caption{Example - Worker Matlab Chart.}
-	\label{fig:plot_worker}
-\end{figure}
-\begin{figure}[thbp]
-	\centering
-	\includegraphics[width=\columnwidth]{images/plot_worker_zoom.pdf}
-	\caption{Example - Zoomed Details Worker Matlab Chart.}
-	\label{fig:plot_worker_zoom}
+\end{minipage}
+%\end{figure}
+%\begin{figure}[thbp]
+	%\centering
+	\begin{minipage}{0.5\columnwidth}
+		\includegraphics[width=\columnwidth]{images/plot_worker.pdf}
+		\caption{Example - Worker Matlab Chart.}
+		\label{fig:plot_worker}
+	\end{minipage}
+%\end{figure}
+%\begin{figure}[thbp]
+	%\centering
+	\begin{minipage}{0.5\columnwidth}
+		\includegraphics[width=\columnwidth]{images/plot_worker_zoom.pdf}
+		\caption{Example - Zoomed Worker Matlab Chart.}
+		\label{fig:plot_worker_zoom}
+	\end{minipage}
 \end{figure}
  
 \hypertarget{download-requirements}{%
@@ -777,8 +872,8 @@ $ python3 xSpark_dagsymb.py *command [*args*]*
 	syntax:}\label{command-args-syntax}}
 
 \begin{verbatim}
-[setup | reboot | terminate | log | profiling | time_analysis | check | 
-profile | submit | launch_exp] [*args*]
+[setup | reboot | terminate | log | check | 
+ profile_symex | submit_symex | launch_exp] [*args*]
 \end{verbatim}
 
 where *args* is a set of command-specific arguments list or options.
@@ -829,11 +924,11 @@ check [hdfs | spark | all | generic]
 checks the status of all nodes in the specified cluster.
 
 \hypertarget{profile-command-syntax}{%
-\subparagraph{\texorpdfstring{\emph{profile} command
+\subparagraph{\texorpdfstring{\emph{profile\_symex} command
 		syntax:}{profile command syntax:}}\label{profile-command-syntax}}
 
 \begin{verbatim}
-profile [*exp_file_paths*] {[-r | --num-runs] *numruns*} 
+profile_symex [*exp_file_paths*] {[-r | --num-runs] *numruns*} 
     {[-R | --reuse-dataset]} 
     {[-q | --spark-seq]}      
 \end{verbatim}
@@ -846,11 +941,11 @@ application data in hdfs master node, \emph{-q} or \emph{--spark-seq}
 option instructs xSpark to use Spark data sequencing home directory.
 
 \hypertarget{submit-command-syntax}{%
-\subparagraph{\texorpdfstring{\emph{submit} command
+\subparagraph{\texorpdfstring{\emph{submit\_symex} command
 		syntax:}{submit command syntax:}}\label{submit-command-syntax}}
 
 \begin{verbatim}
-submit [*exp_file_paths*] {[-r | --num-runs] *numruns*} 
+submit_symex [*exp_file_paths*] {[-r | --num-runs] *numruns*} 
      {[-R | --reuse-dataset]}      
 \end{verbatim}
 
@@ -909,12 +1004,12 @@ Configure the control.json file as instructed above.
 Create and initialize a hdfs cluster with 5 nodes:
 
 \begin{verbatim}
-$ python3 xSpark\_dagsymb.py setup hdfs -n 5
+$ python3 xSpark_dagsymb.py setup hdfs -n 5
 \end{verbatim}
 \item
 Create and initialize a spark cluster with 5 nodes:
 \begin{verbatim}
-$ python3 xSpark\_dagsymb.py setup spark -n 5
+$ python3 xSpark_dagsymb.py setup spark -n 5
 \end{verbatim}
 \item
 Create \emph{CallsExample\_1.json CallsExample\_2.json} file with the following contents:
@@ -976,14 +1071,14 @@ CallsExample_2.json:
 Run the Profiling with 5 iterations:
 
 \begin{verbatim}
-$ python3 xSpark\_dagsymb.py profile -r 5 
-  CallsExample\_1.json CallsExample\_2.json
+$ python3 xSpark_dagsymb.py profile_symex -r 5 
+  CallsExample_1.json CallsExample_2.json
 \end{verbatim}
 
 Run the Application Test with 5 iterations:
 
 \begin{verbatim}
-$ python3 xSpark\_dagsymb.py submit  -r 5 
-  CallsExample\_1.json CallsExample\_2.json
+$ python3 xSpark_dagsymb.py submit_symex  -r 5 
+  CallsExample_1.json CallsExample_2.json
 \end{verbatim}
 \end{enumerate}

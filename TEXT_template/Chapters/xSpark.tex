@@ -10,8 +10,10 @@
 xSpark is a Spark extension that offers optimized and elastic provisioning of resources in order to meet execution deadlines. This is obtained by using nested control loops. A centralized control loop, implemented on the master node, controls the execution of the different stages of an application; at the same time multiple local loops, one per
 executor, focus on task execution.
 \begin{figure}
+	\vspace{-1.5cm}
 	\centering
 	\includegraphics[width=\columnwidth]{Images/xspark_execution_flow.pdf}  
+	\vspace{-1.5cm}
 	\caption[xSpark high level setup and execution flow]{High level setup and execution flow of xSpark.}
 	\label{fig:xSparkExecFlow}
 \end{figure}
@@ -39,24 +41,49 @@ Usually Spark applications are run multiple times, as they are reusable and long
 %]{CodeFiles/profileFragment.json}
 
 \begin{figure}
+	%\vspace{-0.5cm}
 	\centering
-	\includegraphics[width=\columnwidth]{Images/profile_fragment.pdf}  
-	\caption[Example of profiling data from a Louvain application]{Example of profiling data from a Louvain application.}
+	%\includegraphics[width=0.75\columnwidth]{Images/profile_fragment.pdf}
+	\begin{minipage}{0,65\columnwidth}
+	\lstinputlisting[
+	firstline=1,
+	lastline=32,
+	%float=tb,
+	language=Python,
+	tabsize=2,
+	basicstyle=\tiny,
+	numbers=left,
+	numberstyle=\tiny,
+	stepnumber=1,
+	numbersep=5pt,
+	caption=, nolol,
+	%captionpos=t,
+	%label=lst:profileFragment
+	]{CodeFiles/profileFragment.json}  
+	\caption[Example of profiling data from application Louvain]{Example of profiling data from application Louvain.}
 	\label{fig:profileFragment}
+	\end{minipage}
 \end{figure}
+%\begin{figure}
+%	\vspace{-0.5cm}
+%	\centering
+%	\includegraphics[width=0.75\columnwidth]{Images/profile_fragment.pdf}  
+%	\caption[Example of profiling data from application Louvain]{Example of profiling data from application Louvain.}
+%	\label{fig:profileFragment}
+%\end{figure}
 
 %In \MyListing{lst:profileFragment}
 In \MyFig{fig:profileFragment} we can see a fragment, relative to stage number zero, of the profiling data of a Louvain application executed in xSpark.
 The duration field contains the serialized total duration of the tasks in milliseconds.
 
-At runtime, the a\plan allows the xSpark scheduler function to know how much
+At runtime, the \plan allows the xSpark scheduler function to know how much
 work was already completed and how much remains to be done. This means that xSpark can only optimize the allocation of the resources if all the executions of the same application use the same \plan. This might not always be the case, for example when the code contains branches or loops, because these might need to be resolved in different ways at runtime. If the application \plan at runtime differs from the one obtained during the profiling phase, xSpark is not able to estimate the amount of remaining work. 
 
-The centralized control loop is activated before the execution of every stage, it uses a heuristic, explained in \MySec{sec:heuristic}, in order to assign a deadline to the stage, calculate the amount of CPU cores that are needed to satisfy it, and assign cores to the allocated executors. 
+The centralized control loop is activated before the execution of each stage, it uses a heuristic, explained in \MySec{sec:heuristic}, in order to assign a deadline to the stage, calculate the amount of CPU cores that are needed to satisfy it, and assign cores to the allocated executors. 
 
 The per-stage deadline takes into account the amount of work already completed, the consumed time, and the overall deadline. All the computations done by the heuristic are based on the information stored in the \plan and obtained during the profiling phase. Unfortunately
 many factors can influence the actual performance and invalidate the prediction, such as the amount of records that have been filtered-out, the available memory, the number of used nodes,
-the storage layer dimension, and so on. It is important to remember that Spark mostly uses in-memory data, but there are operations like textFile, saveAsTextFile and saveAsSequenceFile that impose restricting constraints on the storage layer. If not correctly sized,
+the storage layer dimension, and so on. It is important to remember that Spark mostly uses in-memory data, but there are operations like textFile, saveAsTextFile and saveAsSequenceFile that impose restrictive constraints on the storage layer. If not correctly sized,
 the storage layer might become a bottleneck, causing the throughput to degrade and thus making the provisioning predicted by xSpark incorrect.
 
 Local control loops, explained in \MySec{subsec:controller}, counteract this imprecision
@@ -65,15 +92,17 @@ assigned by the centralized control loop. The local loop controls the progress o
 
 A control theory algorithm determines the amount of CPU cores that must be allocated to the executor for the next control period, typically one second, and assigns them.
 
-xSpark uses Docker in order to dynamically allocate CPU cores and memory. Memory allocation simply sets an upper bound to the memory that each docker container (executor) can use. CPU cores instead are allocated in a more sophisticated way.
+xSpark uses Docker~\cite{misc:Docker} in order to dynamically allocate CPU cores and memory. Memory allocation simply sets an upper bound to the memory that each docker container (executor) can use. CPU cores instead are allocated in a more sophisticated way.
 Using Linux cgroups, Docker can support CPU shares, reservations and quotas. In particular, xSpark uses CPU quotas. CPU shares are not able to limit the number of CPU cores used by a container in a deterministic way, in particular it is not independent of other processes
 running on the same machine. CPU reservation instead does not have the fine granularity we are looking for, indeed the allocation would be limited to entire cores. By using CPU quotas instead, we have a reliable and tunable mechanism that provides also fine granularity
 allocation, in particular it allows xSpark to allocate fractions of cores
 to the containers (executors), with a precision up to 0.05 cores.
-\begin{figure}
+\begin{figure}[t]
+	\vspace{-0.5cm}
 	\centering
 	\includegraphics[width=\columnwidth]{Images/xspark_architecture.pdf}  
-	\caption[Architecture of xSpark.]{Architecture of xSpark. New components are represented in light grey boxes, meanwhile those that start with an x are the modified ones. In dark grey are represented the containerized components (the executors).}
+	\vspace{-3cm}
+	\caption[Architecture of xSpark.]{Architecture of xSpark. New components are represented in light grey boxes, while those that start with an x are the modified ones. In dark grey are represented the containerized components (the executors).}
 	\label{fig:xSparkArchitecture}
 \end{figure}
 \section{Architecture}\label{sec:architecture}
@@ -91,14 +120,14 @@ node. A \textit{xSparkContext} is composed by six components:
 	\item\textit{xDagScheduler} schedules the stages according to the application’s \plan. The submitted stage is enriched with the information obtained during the profiling phase
 	\item\textit{ContextMonitor} monitors the progress of the application, taking into account stage scheduling and completion. It also stores information about the performance of the execution, that will be later used to calculate the deadlines and the resources needed by upcoming stages
 	\item\textit{Planner} is heuristics based and is used to calculate the deadlines and resources associated with a stage
-	\item\textit{ControlEnactor} determines when a stage is ready to be executed, meaning there are enough resources (cores) and sufficient executors become available. It also has the duty of initializing the different executors.
+	\item\textit{ControlEnactor} determines when a stage is ready to be executed, meaning there are enough resources (cores) and sufficient executors are available. It also has the duty of initializing the different executors.
 	\item\textit{xSchedulerBackend} controls the stage execution. In particular it launches new tasks by taking into account the resources availability and registers their completion
 	\item\textit{xTaskScheduler} also controls stage execution, with the goal of allocating tasks to the available cores to optimize data locality. 
 	In general, the closer a data partition required by a task is to the task’s executor, the better.
 \end{itemize}
 
 xSpark also modified the worker nodes. Each node contains a \textit{xWorker} that connects to a \textit{xMaster}, generates local controllers for the executors, and controls the evolution of its executor by dynamically scaling their resources. xWorker creates an \textit{Executor Proxy} for each of the executors that are running on its node. These proxies are placed between the executors and the \textit{xSchedulerBackend}, and are used to monitor the execution progress of the stage assigned to the executors. It is important to remember that each executor focuses on a single stage at a time. The heuristic calculates how many tasks must be executed by each of the executors of the same stage, the strategy is to have an equal number of tasks assigned to each of the executors. This way the deadline assigned to each of the executors coincides with the deadline of their stage. This allows the different executors of the same stage to
-not be synchronized. Native Spark instead requires that executors with free resources spontaneously require new tasks to execute from the master node. 
+not to require synchronization. Native Spark instead requires that executors with free resources spontaneously require new tasks to execute from the master node. 
 
 Every xWorker uses an External Shuffle Service. Native Spark moves data across the cluster in different ways. If the data is stored on executor’s memory, then the executor itself manages the data exchange. If the data is stored on an external storage system (e.g., HDFS cluster),
 they can be retrieved by using different communication protocols. If the data is stored in the internal storage of a worker node, then the data is managed by the External Shuffle Service. Notice that this is not the default, but xSpark adopts this technique to be able to assign
@@ -141,14 +170,18 @@ the work that has already been accomplished.
 Executors that are dedicated to different stages are implicitly independent, and thus their controllers are also independent. The executors that are running in parallel on the same stage must complete the same amount of work (number of tasks) in the same desired time.
 This means that local controllers are independent and do not need to communicate among themselves. Moreover, the heuristic is relegated outside the local controller, so that it cannot compromise the controller’s stability.
 \begin{figure}
+	\vspace{-1cm}
 	\centering
 	\includegraphics[width=\columnwidth]{Images/exec_controller_set_point.pdf}  
+	\vspace{-2cm}
 	\caption[Set point generation for an executor controller.]{Set point generation for an executor controller.}
 	\label{fig:execControllerSetPoint}
 \end{figure}
 \begin{figure}
+	\vspace{-1cm}
 	\centering
 	\includegraphics[width=\columnwidth]{Images/xspark_chart_agg_by_key.pdf}  
+\vspace{-2.5cm}
 	\caption[xSpark chart aggrregate-by-key.]{CPU cores allocated to the application aggregate-by-key running on a xSpark worker node. The blue line represents the allocated cores over the time, gray and black line are desired and actual progress rate respectively. Green line represents the obtained stage ending, while dashed red line is the desired one.}
 	\label{fig:xsparkChartAggByKey}
 \end{figure}

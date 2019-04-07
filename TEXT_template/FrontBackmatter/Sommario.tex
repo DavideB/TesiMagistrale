@@ -1,0 +1,55 @@
+%*****************************************************************
+% Breve riassunto in italiano della tesi da cui si capisca tutto
+% ****************************************************************
+%\newcommand{\estrattoname}{Estratto}
+%\addcontentsline{toc}{chapter}{\estrattoname}
+%\pdfbookmark[1]{Estratto}{Estratto}
+\newcommand{\sommarioname}{Sommario}
+\addcontentsline{toc}{chapter}{\sommarioname}
+\pdfbookmark[1]{Sommario}{Sommario}
+
+\begingroup
+\let\clearpage\relax
+\let\cleardoublepage\relax
+\let\cleardoublepage\relax
+
+%\chapter*{Estratto}
+%\enquote{\ldots il testo delle tesi redatte in lingua straniera dovrà essere introdotto da un
+%ampio estratto in lingua italiana, che andrà collocato dopo l’abstract.}
+\chapter*{Sommario}
+\lettrine[lines=4]{\textcolor{purple}{I}}{l} bisogno di elaborare una quantità sempre crescente di dati generati dalle moderne applicazioni sta guidando una crescente domanda di potenza di calcolo flessibile, spesso soddisfatta dalle soluzioni di cloud computing. Il cloud computing ha rivoluzionato il modo in cui le infrastrutture informatiche vengono astratte e utilizzate sfruttando la virtualizzazione e fornendo un facile accesso alle risorse attraverso Internet~\cite{articleBigData:2017}.
+
+
+I big data sono un campo di ricerca che si occupa dei modi per analizzare ed estrarre informazioni da set di dati contenenti dati strutturati e non strutturati, la cui dimensione è così grande che ne rende molto difficile o praticamente impossibile l'elaborazione con database e applicazioni tradizionali. L'elaborazione di questi dati richiede quindi l'uso di framework distribuiti specializzati per l'esecuzione parallela di programmi, come Apache Hadoop ~\cite{misc:ApacheHadoop} e Apache Spark~\cite{misc:ApacheSpark}. Questi framework specializzati sono utilizzati per trasformare le applicazioni in parti atomiche che possono essere eseguite in un cluster distribuiti di macchine fisiche o virtuali.
+
+
+Hadoop utilizza il modello di programmazione Map-Reduce che è stato inizialmente introdotto da Google~\cite{misc:GoogleMapReduce} e si compone di due fasi distinte: Map e Reduce.
+
+
+Il primo processa e \textit{trasforma} un blocco di dati per produrre coppie chiave-valore (tuple) come output intermedi, quest'ultimo \textit{aggrega} queste tuple in un output finale.
+
+Una soluzione più avanzata è rappresentata da Apache Spark~\cite{misc:ApacheSpark}, che consente esecuzioni più rapide evitando o limitando l'utilizzo dell'archiviazione persistente e fornisce un modello di programmazione più sofisticato basato su piani di esecuzione paralleli (\plans) che sono rappresentati come un grafico aciclico orientato (DAG) delle fasi.
+
+Le applicazioni di big data pongono nuove sfide nel soddisfare i requisiti sulla \textit{Qualità del Servizio} (\qos) fornita agli utenti finali. Nel contesto delle applicazioni tradizionali (ad esempio le applicazioni web), questo problema è stato spesso affrontato utilizzando sistemi autoadattativi che controllano \textit {KPIs} (Key Performance Indicators) a runtime rispetto ai cambiamenti nel contesto dell'applicazione e nel carico di lavoro.
+
+Rispetto alle applicazioni tradizionali, dove una singola esecuzione dura da decine a centinaia di millisecondi, le applicazioni di big data potrebbero richiedere minuti o ore per elaborare grandi dataset, quindi il  \qos deve considerare l'esecuzione di singole esecuzioni. Pertanto, in questo dominio il \qos viene spesso definito attraverso la \textbf{deadline}, che è la durata massima consentita della singola esecuzione  dell'applicazione.
+
+Il tempo di esecuzione delle applicazioni big data dipende da molti fattori come la quantità di risorse di calcolo disponibili (CPU, memoria, storage) e l'esecuzione simultanea di altre applicazioni nello stesso cluster. Pertanto, in letteratura si possono trovare diversi approcci \cite{Verma2011, Hindman2011, Cheng2015} che si concentrano sull'assegnazione delle risorse o sulle tecniche di schedulazione al fine di ridurre le violazioni delle deadline  utilizzando diverse tecniche come la programmazione lineare intera, l'apprendimento automatico e la teoria del controllo.
+
+Tutti questi approcci utilizzano la conoscenza del \plan per ragionare, prevedere o stimare il tempo di esecuzione dell'applicazione e lavorare partendo dal presupposto che il \plan dell'applicazione non cambi a seconda dei diversi dataset di input o parametri dell'applicazione. Sfortunatamente, questo è vero solo se il codice dell'applicazione non contiene alcun branch condizionale il cui risultato dipende dai valori di input dell'utente o dal risultato di calcoli precedenti che coinvolgono dati di input. In caso contrario, potrebbero essere necessari diversi \plans delle applicazioni per descrivere tutti i possibili flussi di esecuzione generati dalle combinazioni dei diversi risultati che derivano dal codice dell'applicazione. Senza considerare tutti questi \plans, l'analisi dell'applicazione potrebbe essere notevolmente imprecisa.
+
+xSpark, sviluppato al Politecnico di Milano, è un'estensione del framework Apache Spark che offre un'allocazione dinamica delle risorse a grana fine utilizzando contenitori leggeri e pianificatori teorici del controllo. Consente agli utenti di impostare le deadline delle applicazioni (cosa non  possibile utilizzando Spark) e utilizza la conoscenza del \plan dell'applicazione, recuperato durante una fase di profilazione, per allocare dinamicamente le risorse all'applicazione.
+xSpark non considera loop o branch condizionali nel codice dell'applicazione e presuppone che il  \plan sia univoco.
+
+\tool, la soluzione descritta in questa tesi, estende la capacità di xSpark di eseguire in sicurezza applicazioni multi-\plan, sfruttando l'esecuzione simbolica. Ad ogni risultato di un branch decisionale nell'applicazione, \tool determina quali \plans sono ancora validi e pota l'albero dei \plans, rimuovendo i \plans non più validi, lasciando così solo quelli validi nell'albero dei \plans. Una euristica viene utilizzata per selezionare il \plan da eseguire tra quelli validi, al fine di ridurre al minimo il rischio di oltrepassare la deadline, massimizzando l'efficienza di utilizzo della CPU.
+
+\tool è il risultato dell'integrazione di \dSymb, uno strumento che sfrutta l'esecuzione simbolica per scoprire tutti i possibili {\plan} delle applicazioni prodotte da diversi input e parametri, con una versione modificata di xSpark.
+
+Abbiamo testato \tool con due applicazioni, Promocalls e Louvain, che utilizza \textit{GraphX}, una libreria Spark specializzata per l'elaborazione di grafi.
+
+La valutazione mostra che \approach è in grado di estrarre efficacemente tutti i \plans generati dalle applicazioni Spark e che \tool controlla in modo efficace ed efficiente l'allocazione delle risorse durante l'esecuzione di PromoCalls e Louvain, mantenendo i tempi di esecuzione entro scadenze prefissate con errori significativamente minori e consumando una quantità di risorse inferiore rispetto alla versione originale di \cSpark.
+
+Poiché la soluzione attuale si concentra sul controllo di una singola applicazione, un lavoro futuro potrebbe essere diretto all'estensione di \tool per controllare più applicazioni concorrenti.
+
+\endgroup
+
