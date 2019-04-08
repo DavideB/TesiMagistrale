@@ -34,7 +34,7 @@ There are available MapReduce libraries written in different programming languag
 	\label{fig:mapReduce}
 \end{figure}
 
-MapReduce is a programming framework that allows us to perform distributed and parallel processing on large data sets in a distributed environment.\footnote{Extracted from: https://www.edureka.co/blog/mapreduce-tutorial/}.
+MapReduce is a programming framework that allows us to perform distributed and parallel processing on large data sets in a distributed environment.\footnote{Extracted from: \url{https://www.edureka.co/blog/mapreduce-tutorial/}}.
 \begin{itemize}
 	\item MapReduce consists of two distinct tasks – Map and Reduce.
 	\item As the name MapReduce suggests, reducer phase takes place after mapper phase has been completed.
@@ -84,7 +84,7 @@ Apache Hadoop MapReduce cluster has a centralized structure composed by a master
 
 JT organizes the job tasks on the slave nodes and continuously polls the Task Trackers by means of heartbeats. Heartbeats retrieve information about the liveliness of the slaves and to inspect the progress of the task  executions. If a task execution fails, it is re-executed possibly on a different slave. JT is also the cluster manager, so it check the eligibility of the submitted MapReduce jobs. TT runs the assigned task and replies to heartbeats in order to affirm their liveliness and update the master about the progress of the assigned tasks. %They are configured with a fixed number of map and reduce task slots.
 
-Apache Hadoop also offers a distributed filesystem that stores data on several machine, providing a high aggregate bandwidth across the cluster. It is called Hadoop Distributed File System (HDFS)\footnote{\textit{HDFS Architecture Guide.} url:  https://hadoop.apache.org/docs/r1.2.1/hdfs\_design.html}. 
+Apache Hadoop also offers a distributed filesystem that stores data on several machine, providing a high aggregate bandwidth across the cluster. It is called Hadoop Distributed File System (HDFS)\footnote{\textit{HDFS Architecture Guide.} \url{https://hadoop.apache.org/docs/r1.2.1/hdfs\_design.html}}. 
 It is highly fault tolerant and designed to run on commodity hardware.
 \begin{figure}
 	\vspace{-1.5cm}
